@@ -71,6 +71,15 @@ class ScriptSQLite {
     )
   ''';
 
+  static const String _criarTabelaVideoAula = '''
+    CREATE TABLE video_aula (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      link_video TEXT,
+      ativo INTEGER NOT NULL DEFAULT 1
+    )
+  ''';
+
   // Variável pública com todos os comandos de criação
   static const List<String> comandosCriarTabelas = [
     _criarTabelaFabricante,
@@ -79,6 +88,7 @@ class ScriptSQLite {
     _criarTabelaArtistaBanda,
     _criarTabelaAluno,
     _criarTabelaSala,
+    _criarTabelaVideoAula,
   ];
 
   // ===== COMANDOS DE INSERÇÃO =====
@@ -139,6 +149,13 @@ class ScriptSQLite {
     "INSERT INTO sala (nome, numero_bikes, numero_filas, limite_bikes_por_fila, grade_bikes, ativa) VALUES ('Sala Iniciantes', 15, 3, 5, '[[0,0,1,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]', 1)",
   ];
 
+  static const List<String> _insercoesVideoAula = [
+    "INSERT INTO video_aula (nome, link_video, ativo) VALUES ('APT.', 'https://www.youtube.com/watch?v=ekr2nIex040&list=PLCOZc3W9asbFQTM2tkafuXkwGuGTbbCGy', 1)",
+    "INSERT INTO video_aula (nome, link_video, ativo) VALUES ('Die With A Smile', 'https://www.youtube.com/watch?v=kPa7bsKwL-c&list=PLCOZc3W9asbFQTM2tkafuXkwGuGTbbCGy&index=9', 1)",
+    "INSERT INTO video_aula (nome, link_video, ativo) VALUES ('Flowers', 'https://www.youtube.com/watch?v=G7KNmW9a75Y&list=PLCOZc3W9asbFQTM2tkafuXkwGuGTbbCGy&index=29', 1)",
+    "INSERT INTO video_aula (nome, link_video, ativo) VALUES ('Counting Stars', 'https://www.youtube.com/watch?v=hT_nvWreIhg&list=RDhT_nvWreIhg&start_radio=1', 0)",
+  ];
+
   // Variável pública com todas as inserções
   static const List<List<String>> comandosInsercoes = [
     _insercoesFabricante,
@@ -147,5 +164,6 @@ class ScriptSQLite {
     _insercoesArtistaBanda,
     _insercoesAluno,
     _insercoesSala,
+    _insercoesVideoAula,
   ];
 } 

@@ -7,11 +7,11 @@ import 'script.dart';
 
 class ConexaoSQLite {
   static Database? _database;
-  
+
   // Método singleton para obter a instância do banco
   static Future<Database> get database async {
     if (_database != null) return _database!;
-    
+
     _database = await _inicializarBanco();
     return _database!;
   }
@@ -37,7 +37,7 @@ class ConexaoSQLite {
       path = join(databasesPath, 'spin_flow.db');
     }
     //deleteDatabase(path);
-
+    //await databaseFactory.deleteDatabase(path);
     // Abrir ou criar banco
     return await databaseFactory.openDatabase(
       path,
@@ -54,7 +54,7 @@ class ConexaoSQLite {
     for (String comando in ScriptSQLite.comandosCriarTabelas) {
       await db.execute(comando);
     }
-    
+
     // Inserir dados iniciais
     for (List<String> insercoes in ScriptSQLite.comandosInsercoes) {
       for (String comando in insercoes) {
@@ -63,7 +63,11 @@ class ConexaoSQLite {
     }
   }
 
-  static Future<void> _atualizarBanco(Database db, int oldVersion, int newVersion) async {
+  static Future<void> _atualizarBanco(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     // Lógica para atualizações futuras
   }
 
@@ -74,4 +78,4 @@ class ConexaoSQLite {
       _database = null;
     }
   }
-} 
+}
