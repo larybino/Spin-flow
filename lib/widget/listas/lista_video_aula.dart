@@ -1,10 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:spin_flow/banco/mock/mock_video_aula.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_video_aula.dart';
 import 'package:spin_flow/dto/dto_video_aula.dart';
 import 'package:spin_flow/configuracoes/rotas.dart';
 
-class ListaVideoAula extends StatelessWidget {
+
+class ListaVideoAula extends StatefulWidget {
   const ListaVideoAula({super.key});
+
+  @override
+  State<ListaVideoAula> createState() => _ListaVideoAulaState();
+}
+
+class _ListaVideoAulaState extends State<ListaVideoAula> {
+  final DAOVideoAula _dao = DAOVideoAula();
+
+  void _recarregarLista() {
+    setState(() {});
+  }
+
+  Future<void> _navegarParaFormulario([DTOVideoAula? videoAula]) async {
+    await Navigator.pushNamed(
+      context,
+      Rotas.cadastroVideoAula,
+      arguments: videoAula,
+    );
+    _recarregarLista();
+  }
+
+  void _excluirVideoAula(int id) {
+    _dao.excluir(id).then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vídeo-aula excluída com sucesso!')),
+      );
+      _recarregarLista();
+    }).catchError((e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao excluir: $e')),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
