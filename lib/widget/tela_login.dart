@@ -43,7 +43,12 @@ class _TelaLoginState extends State<TelaLogin> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CampoEmail(controle: _emailController),
-              CampoSenha(controle: _senhaController, rotulo: 'Usuário',dica: 'Informe a senha', mensagemErro: Erro.obrigatorio),
+              CampoSenha(
+                controle: _senhaController,
+                rotulo: 'Usuário',
+                dica: 'Informe a senha',
+                mensagemErro: Erro.obrigatorio,
+              ),
               const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: _fazerLogin,

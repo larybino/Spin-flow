@@ -15,6 +15,7 @@ class _TelaDashboardProfessoraState extends State<TelaDashboardProfessora> with 
   final List<Tab> _abas = const [
     Tab(icon: Icon(Icons.dashboard), text: 'Visão Geral'),
     Tab(icon: Icon(Icons.folder_copy), text: 'Cadastros'),
+    Tab(icon: Icon(Icons.list), text: 'Listas'),
     Tab(icon: Icon(Icons.event), text: 'Aulas'),
     Tab(icon: Icon(Icons.build), text: 'Manutenção'),
     Tab(icon: Icon(Icons.chat), text: 'Recados'),
@@ -48,6 +49,7 @@ class _TelaDashboardProfessoraState extends State<TelaDashboardProfessora> with 
         children: [
           _visaoGeral(),
           _cadastros(),
+          _listas(),
           _aulasEAuloes(),
           _manutencao(),
           _recados(),
@@ -76,38 +78,115 @@ class _TelaDashboardProfessoraState extends State<TelaDashboardProfessora> with 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _CadastroTile('Mix', Icons.queue_music, () {
-          Navigator.pushNamed(context, Rotas.cadastroMix);
-        }),
-        _CadastroTile('Banda', Icons.music_video, () {
-          Navigator.pushNamed(context, Rotas.cadastroArtistaBanda);
-        }),
-        _CadastroTile('Músicas', Icons.library_music, () {
-          Navigator.pushNamed(context, Rotas.cadastroMusica);
-        }),
-        _CadastroTile('Categorias de Música', Icons.category, () {
-          Navigator.pushNamed(context, Rotas.cadastroCategoriaMusica);
-        }),
-        _CadastroTile('Turmas', Icons.group, () {
-          Navigator.pushNamed(context, Rotas.cadastroTurma);
-        }),
-        _CadastroTile('Alunos', Icons.person, () {
-          Navigator.pushNamed(context, Rotas.cadastroAluno);
-        }),
-        _CadastroTile('Grupos de Alunos', Icons.groups, () {
-          Navigator.pushNamed(context, Rotas.cadastroGrupoAlunos);
-        }),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            'Cadastros Simples',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
         _CadastroTile('Fabricante', Icons.factory, () {
           Navigator.pushNamed(context, Rotas.cadastroFabricante);
-        }),
-        _CadastroTile('Bikes', Icons.directions_bike, () {
-          Navigator.pushNamed(context, Rotas.cadastroBike);
         }),
         _CadastroTile('Sala', Icons.meeting_room, () {
           Navigator.pushNamed(context, Rotas.cadastroSala);
         }),
         _CadastroTile('Tipo de Manutenção', Icons.build, () {
           Navigator.pushNamed(context, Rotas.cadastroTipoManutencao);
+        }),
+        _CadastroTile('Categorias de Música', Icons.category, () {
+          Navigator.pushNamed(context, Rotas.cadastroCategoriaMusica);
+        }),
+        _CadastroTile('Vídeo-aula', Icons.ondemand_video, () {
+          Navigator.pushNamed(context, Rotas.cadastroVideoAula);
+        }),
+        _CadastroTile('Artistas/Bandas', Icons.music_video, () {
+          Navigator.pushNamed(context, Rotas.cadastroArtistaBanda);
+        }),
+        _CadastroTile('Alunos', Icons.person, () {
+          Navigator.pushNamed(context, Rotas.cadastroAluno);
+        }),
+        const Divider(),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            'Cadastros com Associações',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        _CadastroTile('Bikes', Icons.directions_bike, () {
+          Navigator.pushNamed(context, Rotas.cadastroBike);
+        }),
+        _CadastroTile('Músicas', Icons.library_music, () {
+          Navigator.pushNamed(context, Rotas.cadastroMusica);
+        }),
+        _CadastroTile('Mix', Icons.queue_music, () {
+          Navigator.pushNamed(context, Rotas.cadastroMix);
+        }),
+        _CadastroTile('Turmas', Icons.group, () {
+          Navigator.pushNamed(context, Rotas.cadastroTurma);
+        }),
+        _CadastroTile('Grupos de Alunos', Icons.groups, () {
+          Navigator.pushNamed(context, Rotas.cadastroGrupoAlunos);
+        }),
+      ],
+    );
+  }
+
+  Widget _listas() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            'Listas Simples',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        _CadastroTile('Fabricantes', Icons.factory, () {
+          Navigator.pushNamed(context, Rotas.listaFabricantes);
+        }),
+        _CadastroTile('Categorias de Música', Icons.category, () {
+          Navigator.pushNamed(context, Rotas.listaCategoriasMusica);
+        }),
+        _CadastroTile('Tipos de Manutenção', Icons.build, () {
+          Navigator.pushNamed(context, Rotas.listaTiposManutencao);
+        }),
+        _CadastroTile('Artistas/Bandas', Icons.music_video, () {
+          Navigator.pushNamed(context, Rotas.listaArtistasBandas);
+        }),
+        _CadastroTile('Alunos', Icons.person, () {
+          Navigator.pushNamed(context, Rotas.listaAlunos);
+        }),
+        _CadastroTile('Salas', Icons.room, () {
+          Navigator.pushNamed(context, '/rota-quebrada-salas');
+        }),
+        _CadastroTile('Vídeo-aula', Icons.ondemand_video, () {
+          Navigator.pushNamed(context, '/lista-video-aula');
+        }),
+        const Divider(),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            'Listas com Associações',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        _CadastroTile('Bikes', Icons.directions_bike, () {
+          Navigator.pushNamed(context, Rotas.listaBikes);
+        }),
+        _CadastroTile('Músicas', Icons.library_music, () {
+          Navigator.pushNamed(context, Rotas.listaMusicas);
+        }),
+        _CadastroTile('Mixes', Icons.queue_music, () {
+          Navigator.pushNamed(context, Rotas.listaMixes);
+        }),
+        _CadastroTile('Turmas', Icons.group, () {
+          Navigator.pushNamed(context, Rotas.listaTurmas);
+        }),
+        _CadastroTile('Grupos de Alunos', Icons.groups, () {
+          Navigator.pushNamed(context, Rotas.listaGruposAlunos);
         }),
       ],
     );

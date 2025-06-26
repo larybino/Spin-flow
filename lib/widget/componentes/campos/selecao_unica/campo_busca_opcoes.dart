@@ -7,7 +7,7 @@ class CampoBuscaOpcoes<T extends DTO> extends StatefulWidget {
   final bool eObrigatorio;
   final String textoPadrao;
   final String rotulo;
-  final void Function(T?)? onChanged;
+  final void Function(T?)? aoAlterar;
   final String rotaCadastro;
 
   const CampoBuscaOpcoes({
@@ -17,7 +17,7 @@ class CampoBuscaOpcoes<T extends DTO> extends StatefulWidget {
     this.eObrigatorio = true,
     this.textoPadrao = 'Digite para buscar...',
     required this.rotulo,
-    this.onChanged,
+    this.aoAlterar,
     required this.rotaCadastro,
   });
 
@@ -28,8 +28,8 @@ class CampoBuscaOpcoes<T extends DTO> extends StatefulWidget {
 class _CampoBuscaOpcoesState<T extends DTO> extends State<CampoBuscaOpcoes<T>> {
   late List<T> _opcoesFiltradas;
   T? _selecionado;
-  final TextEditingController _controller = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
+  final TextEditingController _controlador = TextEditingController();
+  final FocusNode _foco = FocusNode();
   bool _exibirSugestoes = false;
 
   @override
@@ -38,7 +38,7 @@ class _CampoBuscaOpcoesState<T extends DTO> extends State<CampoBuscaOpcoes<T>> {
     _opcoesFiltradas = List.from(widget.opcoes);
     _selecionado = widget.valorSelecionado;
     if (_selecionado != null) {
-      _controller.text = _selecionado!.nome;
+      _controlador.text = _selecionado!.nome;
     }
   }
 
@@ -56,9 +56,9 @@ class _CampoBuscaOpcoesState<T extends DTO> extends State<CampoBuscaOpcoes<T>> {
     if (novoItem != null && novoItem is T) {
       setState(() {
         widget.opcoes.add(novoItem);
-        _controller.text = novoItem.nome;
+        _controlador.text = novoItem.nome;
         _selecionado = novoItem;
-        widget.onChanged?.call(_selecionado);
+        widget.aoAlterar?.call(_selecionado);
         _exibirSugestoes = false;
       });
     }
@@ -80,8 +80,8 @@ class _CampoBuscaOpcoesState<T extends DTO> extends State<CampoBuscaOpcoes<T>> {
           children: [
             Expanded(
               child: TextFormField(
-                controller: _controller,
-                focusNode: _focusNode,
+                controller: _controlador,
+                focusNode: _foco,
                 decoration: InputDecoration(
                   labelText: widget.rotulo,
                 ),
@@ -107,18 +107,16 @@ class _CampoBuscaOpcoesState<T extends DTO> extends State<CampoBuscaOpcoes<T>> {
                   title: Text(item.nome),
                   onTap: () {
                     setState(() {
-                      _controller.text = item.nome;
+                      _controlador.text = item.nome;
                       _selecionado = item;
                       _exibirSugestoes = false;
                     });
-                    widget.onChanged?.call(item);
-
-                    // Seleciona o texto inteiro após um pequeno delay
+                    widget.aoAlterar?.call(item);
                     Future.delayed(const Duration(milliseconds: 100), () {
-                      _focusNode.requestFocus();
-                      _controller.selection = TextSelection(
+                      _foco.requestFocus();
+                      _controlador.selection = TextSelection(
                         baseOffset: 0,
-                        extentOffset: _controller.text.length,
+                        extentOffset: _controlador.text.length,
                       );
                     });
                   },
@@ -132,8 +130,8 @@ class _CampoBuscaOpcoesState<T extends DTO> extends State<CampoBuscaOpcoes<T>> {
 
   @override
   void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
+    _controlador.dispose();
+    _foco.dispose();
     super.dispose();
   }
 }

@@ -23,4 +23,17 @@ class Rotas {
   static const String cadastroAluno = '/cadastro-aluno';
   static const String cadastroTipoManutencao = '/cadastro-tipo-manutencao';
   static const String cadastroGrupoAlunos = '/cadastro-grupo-alunos';
+  static const String cadastroVideoAula = '/cadastroVideoAula';
+  
+  // Rotas das listas
+  static const String listaFabricantes = '/lista-fabricantes';
+  static const String listaCategoriasMusica = '/lista-categorias-musica';
+  static const String listaTiposManutencao = '/lista-tipos-manutencao';
+  static const String listaArtistasBandas = '/lista-artistas-bandas';
+  static const String listaAlunos = '/lista-alunos';
+  static const String listaMusicas = '/lista-musicas';
+  static const String listaTurmas = '/lista-turmas';
+  static const String listaBikes = '/lista-bikes';
+  static const String listaMixes = '/lista-mixes';
+  static const String listaGruposAlunos = '/lista-grupos-alunos';
 }

@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:spin_flow/banco/sqlite/conexao.dart';
 import 'package:spin_flow/dto/dto_tipo_manutencao.dart';
 
@@ -6,7 +5,7 @@ class DAOTipoManutencao {
   static const String _tabela = 'tipo_manutencao';
 
   // Salvar (inserir ou atualizar)
-  static Future<int> salvar(DTOTipoManutencao tipo) async {
+  Future<int> salvar(DTOTipoManutencao tipo) async {
     final db = await ConexaoSQLite.database;
     
     if (tipo.id != null) {
@@ -33,7 +32,7 @@ class DAOTipoManutencao {
   }
 
   // Buscar todos
-  static Future<List<DTOTipoManutencao>> buscarTodos() async {
+  Future<List<DTOTipoManutencao>> buscarTodos() async {
     final db = await ConexaoSQLite.database;
     final List<Map<String, dynamic>> maps = await db.query(_tabela);
     
@@ -47,7 +46,7 @@ class DAOTipoManutencao {
   }
 
   // Buscar por ID
-  static Future<DTOTipoManutencao?> buscarPorId(int id) async {
+  Future<DTOTipoManutencao?> buscarPorId(int id) async {
     final db = await ConexaoSQLite.database;
     final List<Map<String, dynamic>> maps = await db.query(
       _tabela,
@@ -66,7 +65,7 @@ class DAOTipoManutencao {
   }
 
   // Excluir
-  static Future<int> excluir(int id) async {
+  Future<int> excluir(int id) async {
     final db = await ConexaoSQLite.database;
     return await db.delete(
       _tabela,

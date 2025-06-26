@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
 class CampoDiasSemana extends StatefulWidget {
-  final List<String> diasSelecionados; // exemplo: ['Seg', 'Qua', 'Sex']
-  final void Function(List<String>) onChanged;
+  final List<String> diasSelecionados;
+  final String rotulo;
   final bool eObrigatorio;
-  final String mensagemErro;
+  final String? Function(List<String>)? validador;
+  final void Function(List<String>) aoAlterar;
 
   const CampoDiasSemana({
     super.key,
     this.diasSelecionados = const [],
-    required this.onChanged,
+    this.rotulo = 'Dias da Semana',
     this.eObrigatorio = true,
-    this.mensagemErro = 'Selecione pelo menos um dia da semana',
+    this.validador,
+    required this.aoAlterar,
   });
 
   @override
@@ -19,62 +21,55 @@ class CampoDiasSemana extends StatefulWidget {
 }
 
 class _CampoDiasSemanaState extends State<CampoDiasSemana> {
-  static const List<String> todosDias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-  late List<String> selecionados;
-  String? erro;
+  static const List<String> _todosDias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  late List<String> _selecionados;
+  String? _erro;
 
   @override
   void initState() {
     super.initState();
-    selecionados = List.from(widget.diasSelecionados);
+    _selecionados = List.from(widget.diasSelecionados);
   }
 
-  void _toggleDia(String dia) {
+  void _alternarDia(String dia) {
     setState(() {
-      if (selecionados.contains(dia)) {
-        selecionados.remove(dia);
+      if (_selecionados.contains(dia)) {
+        _selecionados.remove(dia);
       } else {
-        selecionados.add(dia);
+        _selecionados.add(dia);
       }
-      erro = null;
+      _erro = null;
     });
-    widget.onChanged(selecionados);
-  }
-
-  bool validar() {
-    if (widget.eObrigatorio && selecionados.isEmpty) {
-      setState(() {
-        erro = widget.mensagemErro;
-      });
-      return false;
-    }
-    setState(() {
-      erro = null;
-    });
-    return true;
+    widget.aoAlterar(_selecionados);
   }
 
   @override
   Widget build(BuildContext context) {
+    _erro = widget.validador?.call(_selecionados) ?? (widget.eObrigatorio && _selecionados.isEmpty ? 'Selecione pelo menos um dia da semana' : null);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (widget.rotulo.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(widget.rotulo, style: Theme.of(context).textTheme.titleMedium),
+          ),
         Wrap(
           spacing: 8,
-          children: todosDias.map((dia) {
-            final estaSelecionado = selecionados.contains(dia);
+          children: _todosDias.map((dia) {
+            final estaSelecionado = _selecionados.contains(dia);
             return ChoiceChip(
               label: Text(dia),
               selected: estaSelecionado,
-              onSelected: (_) => _toggleDia(dia),
+              onSelected: (_) => _alternarDia(dia),
             );
           }).toList(),
         ),
-        if (erro != null)
+        if (_erro != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              erro!,
+              _erro!,
               style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
             ),
           ),

@@ -4,76 +4,85 @@ import 'package:spin_flow/widget/componentes/campos/selecao_unica/campo_busca_op
 
 /// Widget reutilizável para seleção múltipla com busca.
 /// T recebe um tipo que herda de DTO e sobrescreve toString() ou implementa nome.
-class CampoBuscaMultipla<T extends DTO> extends StatefulWidget {
+class CampoBuscaMultipla<T extends DTO> extends StatelessWidget {
   final List<T> opcoes;
+  final List<T> valoresSelecionados;
   final String rotulo;
   final String textoPadrao;
-  final String? mensagemValidacao;
-  final void Function(List<T> selecionados)? onChanged;
+  final String? Function(List<T>)? validador;
+  final void Function(List<T>)? onChanged;
   final String rotaCadastro;
 
   const CampoBuscaMultipla({
     super.key,
     required this.opcoes,
+    required this.valoresSelecionados,
     required this.rotulo,
     required this.textoPadrao,
-    this.mensagemValidacao,
+    this.validador,
     this.onChanged,
     required this.rotaCadastro,
   });
 
-  @override
-  State<CampoBuscaMultipla<T>> createState() => _CampoBuscaMultiplaState<T>();
-}
-
-class _CampoBuscaMultiplaState<T extends DTO> extends State<CampoBuscaMultipla<T>> {
-  final List<T> _selecionados = [];
-
-  void _adicionarItem(T item) {
-    if (!_selecionados.contains(item)) {
-      setState(() {
-        _selecionados.add(item);
-      });
-      widget.onChanged?.call(_selecionados);
+  String? _validarCampo(List<T> selecionados) {
+    if (validador != null) {
+      return validador!(selecionados);
     }
-  }
-
-  void _removerItem(T item) {
-    setState(() {
-      _selecionados.remove(item);
-    });
-    widget.onChanged?.call(_selecionados);
+    if (selecionados.isEmpty) {
+      return 'Selecione pelo menos um item';
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final erro = _validarCampo(valoresSelecionados);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CampoBuscaOpcoes<T>(
-          opcoes: widget.opcoes,
-          rotulo: widget.rotulo,
-          textoPadrao: widget.textoPadrao,
+          opcoes: opcoes,
+          rotulo: rotulo,
+          textoPadrao: textoPadrao,
           eObrigatorio: false,
-          rotaCadastro: widget.rotaCadastro,
-          onChanged: (item) {
-            if (item != null) _adicionarItem(item);
+          rotaCadastro: rotaCadastro,
+          aoAlterar: (item) {
+            if (item != null && onChanged != null) {
+              final novaLista = List<T>.from(valoresSelecionados);
+              if (!novaLista.contains(item)) {
+                novaLista.add(item);
+                onChanged!(List<T>.from(novaLista));
+              }
+            }
           },
         ),
         const SizedBox(height: 8),
         Text(
-          widget.rotulo,
+          rotulo,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        ..._selecionados.map(
+        ...valoresSelecionados.map(
           (item) => ListTile(
             title: Text(item.nome),
             trailing: IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _removerItem(item),
+              onPressed: () {
+                if (onChanged == null) return;
+                final novaLista = List<T>.from(valoresSelecionados);
+                novaLista.remove(item);
+                onChanged!(List<T>.from(novaLista));
+              },
             ),
           ),
-        )
+        ),
+        if (erro != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0, left: 12),
+            child: Text(
+              erro,
+              style: TextStyle(color: Colors.red[700], fontSize: 12),
+            ),
+          ),
       ],
     );
   }

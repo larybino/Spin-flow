@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:spin_flow/banco/sqlite/conexao.dart';
 import 'package:spin_flow/dto/dto_categoria_musica.dart';
 
@@ -6,7 +5,7 @@ class DAOCategoriaMusica {
   static const String _tabela = 'categoria_musica';
 
   // Salvar (inserir ou atualizar)
-  static Future<int> salvar(DTOCategoriaMusica categoria) async {
+  Future<int> salvar(DTOCategoriaMusica categoria) async {
     final db = await ConexaoSQLite.database;
     
     if (categoria.id != null) {
@@ -15,6 +14,7 @@ class DAOCategoriaMusica {
         _tabela,
         {
           'nome': categoria.nome,
+          'descricao': categoria.descricao,
           'ativa': categoria.ativa ? 1 : 0,
         },
         where: 'id = ?',
@@ -26,6 +26,7 @@ class DAOCategoriaMusica {
         _tabela,
         {
           'nome': categoria.nome,
+          'descricao': categoria.descricao,
           'ativa': categoria.ativa ? 1 : 0,
         },
       );
@@ -33,7 +34,7 @@ class DAOCategoriaMusica {
   }
 
   // Buscar todos
-  static Future<List<DTOCategoriaMusica>> buscarTodos() async {
+  Future<List<DTOCategoriaMusica>> buscarTodos() async {
     final db = await ConexaoSQLite.database;
     final List<Map<String, dynamic>> maps = await db.query(_tabela);
     
@@ -41,13 +42,14 @@ class DAOCategoriaMusica {
       return DTOCategoriaMusica(
         id: maps[i]['id'],
         nome: maps[i]['nome'],
+        descricao: maps[i]['descricao'],
         ativa: maps[i]['ativa'] == 1,
       );
     });
   }
 
   // Buscar por ID
-  static Future<DTOCategoriaMusica?> buscarPorId(int id) async {
+  Future<DTOCategoriaMusica?> buscarPorId(int id) async {
     final db = await ConexaoSQLite.database;
     final List<Map<String, dynamic>> maps = await db.query(
       _tabela,
@@ -59,6 +61,7 @@ class DAOCategoriaMusica {
       return DTOCategoriaMusica(
         id: maps[0]['id'],
         nome: maps[0]['nome'],
+        descricao: maps[0]['descricao'],
         ativa: maps[0]['ativa'] == 1,
       );
     }
@@ -66,7 +69,7 @@ class DAOCategoriaMusica {
   }
 
   // Excluir
-  static Future<int> excluir(int id) async {
+  Future<int> excluir(int id) async {
     final db = await ConexaoSQLite.database;
     return await db.delete(
       _tabela,

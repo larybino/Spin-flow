@@ -15,9 +15,7 @@ class FormMix extends StatefulWidget {
 }
 
 class _FormMixState extends State<FormMix> {
-  final _formKey = GlobalKey<FormState>();
-  
-  // Campos do formulário
+  final _chaveFormulario = GlobalKey<FormState>();
   String? _nomeMix;
   String? _descricao;
   DateTime? _dataInicio;
@@ -35,7 +33,7 @@ class _FormMixState extends State<FormMix> {
     setState(() => _musicasSelecionadas.removeWhere((m) => m.id == musica.id));
   }
 
-  void _limparFormulario() {
+  void _limparCampos() {
     setState(() {
       _nomeMix = null;
       _descricao = null;
@@ -44,7 +42,68 @@ class _FormMixState extends State<FormMix> {
       _ativo = true;
       _musicasSelecionadas.clear();
     });
-    _formKey.currentState?.reset();
+    _chaveFormulario.currentState?.reset();
+  }
+
+  DTOMix _criarDTO() {
+    return DTOMix(
+      nome: _nomeMix ?? '',
+      descricao: _descricao,
+      dataInicio: _dataInicio!,
+      dataFim: _dataFim,
+      musicas: _musicasSelecionadas,
+      ativo: _ativo,
+    );
+  }
+
+  void _mostrarMensagem(String mensagem, {bool erro = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: erro ? Colors.red : Colors.green,
+      ),
+    );
+  }
+
+  void _redirecionarAposSalvar() {
+    _limparCampos();
+  }
+
+  void _salvar() {
+    if (_chaveFormulario.currentState!.validate() && _musicasSelecionadas.isNotEmpty) {
+      final dto = _criarDTO();
+      debugPrint(dto.toString());
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Mix Criado'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Nome: ${dto.nome}'),
+                Text('Descrição: ${dto.descricao ?? 'Não informado'}'),
+                Text('Data Início: ${dto.dataInicio.toString().split(' ')[0]}'),
+                if (dto.dataFim != null)
+                  Text('Data Fim: ${dto.dataFim.toString().split(' ')[0]}'),
+                Text('Ativo: ${dto.ativo ? 'Sim' : 'Não'}'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Fechar'),
+            ),
+          ],
+        ),
+      );
+      _mostrarMensagem('Mix salvo com sucesso! ${dto.nome}');
+      _redirecionarAposSalvar();
+    } else {
+      _mostrarMensagem('Preencha todos os campos obrigatórios.', erro: true);
+    }
   }
 
   @override
@@ -52,7 +111,7 @@ class _FormMixState extends State<FormMix> {
     return Scaffold(
       appBar: AppBar(title: const Text('Cadastro de Mix')),
       body: Form(
-        key: _formKey,
+        key: _chaveFormulario,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -60,21 +119,21 @@ class _FormMixState extends State<FormMix> {
               rotulo: 'Nome do Mix',
               dica: 'Ex: Mix Power Março 2025',
               eObrigatorio: true,
-              onChanged: (value) => _nomeMix = value,
+              aoAlterar: (value) => _nomeMix = value,
             ),
             const SizedBox(height: 16),
             CampoData(
-              label: 'Data de início de uso',
+              rotulo: 'Data de início de uso',
               eObrigatorio: true,
               valor: _dataInicio,
-              onChanged: (data) => setState(() => _dataInicio = data),
+              aoAlterar: (data) => setState(() => _dataInicio = data),
             ),
             const SizedBox(height: 16),
             CampoData(
-              label: 'Data de encerramento (opcional)',
+              rotulo: 'Data de encerramento (opcional)',
               eObrigatorio: false,
               valor: _dataFim,
-              onChanged: (data) => setState(() => _dataFim = data),
+              aoAlterar: (data) => setState(() => _dataFim = data),
             ),
             const SizedBox(height: 16),
             CampoBuscaOpcoes<DTOMusica>(
@@ -83,7 +142,7 @@ class _FormMixState extends State<FormMix> {
               eObrigatorio: false,
               textoPadrao: 'Selecione as músicas do mix',
               rotaCadastro: Rotas.cadastroMusica,
-              onChanged: _adicionarMusica,
+              aoAlterar: _adicionarMusica,
             ),
             const SizedBox(height: 8),
             TextButton.icon(
@@ -108,7 +167,7 @@ class _FormMixState extends State<FormMix> {
               dica: 'Ex: Mix voltado para treinos intensos...',
               maxLinhas: 4,
               eObrigatorio: false,
-              onChanged: (value) => _descricao = value,
+              aoAlterar: (value) => _descricao = value,
             ),
             const SizedBox(height: 16),
             SwitchListTile(
@@ -118,59 +177,7 @@ class _FormMixState extends State<FormMix> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate() && _musicasSelecionadas.isNotEmpty) {
-                  // Criar DTO
-                  final dto = DTOMix(
-                    nome: _nomeMix ?? '',
-                    descricao: _descricao,
-                    dataInicio: _dataInicio!,
-                    dataFim: _dataFim,
-                    musicas: _musicasSelecionadas,
-                    ativo: _ativo,
-                  );
-
-                  // Mostrar dados em dialog
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Mix Criado'),
-                      content: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Nome: ${dto.nome}'),
-                            Text('Descrição: ${dto.descricao ?? 'Não informado'}'),
-                            Text('Data Início: ${dto.dataInicio.toString().split(' ')[0]}'),
-                            if (dto.dataFim != null)
-                              Text('Data Fim: ${dto.dataFim.toString().split(' ')[0]}'),
-                            Text('Ativo: ${dto.ativo ? 'Sim' : 'Não'}'),
-                          ],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Fechar'),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  // SnackBar de sucesso
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Mix salvo com sucesso! ${dto.nome}')),
-                  );
-
-                  // Limpar formulário
-                  _limparFormulario();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Preencha todos os campos obrigatórios.')),
-                  );
-                }
-              },
+              onPressed: _salvar,
               child: const Text('Salvar Mix'),
             ),
           ],

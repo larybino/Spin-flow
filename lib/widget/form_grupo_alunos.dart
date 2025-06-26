@@ -15,11 +15,13 @@ class FormGrupoAlunos extends StatefulWidget {
 
 class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nomeControlador = TextEditingController();
+  final TextEditingController _descricaoControlador = TextEditingController();
 
   // Campos do formulário
   String? _nome;
   String? _descricao;
-  final List<DTOAluno> _alunosSelecionados = [];
+  List<DTOAluno> _alunosSelecionados = [];
 
   // Função para validar que há pelo menos 1 aluno selecionado
   String? _validaAlunosSelecionados() {
@@ -99,6 +101,13 @@ class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
   }
 
   @override
+  void dispose() {
+    _nomeControlador.dispose();
+    _descricaoControlador.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -112,33 +121,30 @@ class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CampoTexto(
-                rotulo: 'Nome',
-                dica: 'Digite o nome do grupo',
+                controle: _nomeControlador,
+                rotulo: 'Nome do Grupo',
+                dica: 'Nome do grupo de alunos',
                 eObrigatorio: true,
-                mensagemErro: 'Nome é obrigatório',
-                onChanged: (value) => _nome = value,
+                aoAlterar: (value) => _nome = value,
               ),
               const SizedBox(height: 16),
               CampoTexto(
+                controle: _descricaoControlador,
                 rotulo: 'Descrição',
                 dica: 'Descrição do grupo (opcional)',
                 eObrigatorio: false,
-                maxLinhas: 3,
-                onChanged: (value) => _descricao = value,
+                aoAlterar: (value) => _descricao = value,
               ),
               const SizedBox(height: 16),
               Text('Alunos'),
               const SizedBox(height: 8),
               CampoBuscaMultipla<DTOAluno>(
                 opcoes: mockAlunos,
+                valoresSelecionados: _alunosSelecionados,
                 rotulo: 'Alunos do Grupo',
                 textoPadrao: 'Digite para buscar alunos...',
                 rotaCadastro: Rotas.cadastroAluno,
-                onChanged: (lista) {
-                  _alunosSelecionados
-                    ..clear()
-                    ..addAll(lista);
-                },
+                onChanged: (lista) => setState(() => _alunosSelecionados = lista),
               ),
               const Spacer(),
               SizedBox(

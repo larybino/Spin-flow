@@ -14,6 +14,19 @@ import 'package:spin_flow/widget/form_turma.dart';
 import 'package:spin_flow/widget/tela_dashboard_aluno.dart';
 import 'package:spin_flow/widget/tela_dashboard_professora.dart';
 import 'package:spin_flow/widget/tela_login.dart';
+import 'package:spin_flow/widget/listas/lista_fabricantes.dart';
+import 'package:spin_flow/widget/listas/lista_categorias_musica.dart';
+import 'package:spin_flow/widget/listas/lista_tipos_manutencao.dart';
+import 'package:spin_flow/widget/listas/lista_artistas_bandas.dart';
+import 'package:spin_flow/widget/listas/lista_alunos.dart';
+import 'package:spin_flow/widget/listas/lista_musicas.dart';
+import 'package:spin_flow/widget/listas/lista_turmas.dart';
+import 'package:spin_flow/widget/listas/lista_bikes.dart';
+import 'package:spin_flow/widget/listas/lista_mixes.dart';
+import 'package:spin_flow/widget/listas/lista_grupos_alunos.dart';
+import 'package:spin_flow/widget/listas/lista_salas.dart';
+import 'package:spin_flow/widget/form_video_aula.dart';
+import 'package:spin_flow/widget/listas/lista_video_aula.dart';
 
 class SpinFlowApp extends StatelessWidget {
   const SpinFlowApp({super.key});
@@ -40,6 +53,20 @@ class SpinFlowApp extends StatelessWidget {
         Rotas.cadastroTurma: (context) => const FormTurma(),
         Rotas.cadastroAluno: (context) => const FormAluno(),
         Rotas.cadastroGrupoAlunos: (context) => const FormGrupoAlunos(),
+        Rotas.cadastroVideoAula: (context) => const FormVideoAula(),
+        
+        // Rotas das listas
+        Rotas.listaFabricantes: (context) => const ListaFabricantes(),
+        Rotas.listaCategoriasMusica: (context) => const ListaCategoriasMusica(),
+        Rotas.listaTiposManutencao: (context) => const ListaTiposManutencao(),
+        Rotas.listaArtistasBandas: (context) => const ListaArtistasBandas(),
+        Rotas.listaAlunos: (context) => const ListaAlunos(),
+        Rotas.listaMusicas: (context) => const ListaMusicas(),
+        Rotas.listaTurmas: (context) => const ListaTurmas(),
+        Rotas.listaBikes: (context) => const ListaBikes(),
+        Rotas.listaMixes: (context) => const ListaMixes(),
+        Rotas.listaGruposAlunos: (context) => const ListaGruposAlunos(),
+        '/lista-video-aula': (context) => const ListaVideoAula(),
       },
     );
   }

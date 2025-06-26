@@ -3,7 +3,7 @@ import 'package:spin_flow/dto/dto_bike.dart';
 import 'package:spin_flow/dto/dto_fabricante.dart';
 import 'package:spin_flow/configuracoes/rotas.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_data.dart';
-import 'package:spin_flow/widget/componentes/campos/comum/campo_opcoes.dart';
+import 'package:spin_flow/widget/componentes/campos/selecao_unica/campo_opcoes.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
 import 'package:spin_flow/banco/mock/mock_fabricantes.dart';
 
@@ -25,6 +25,9 @@ class _FormBikeState extends State<FormBike> {
   bool _ativa = true;
 
   final List<DTOFabricante> _fabricantes = mockFabricantes;
+
+  final TextEditingController _nomeControlador = TextEditingController();
+  final TextEditingController _numeroSerieControlador = TextEditingController();
 
   void _limparFormulario() {
     setState(() {
@@ -98,6 +101,13 @@ class _FormBikeState extends State<FormBike> {
   }
 
   @override
+  void dispose() {
+    _nomeControlador.dispose();
+    _numeroSerieControlador.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Cadastro de Bike')),
@@ -108,17 +118,19 @@ class _FormBikeState extends State<FormBike> {
           child: ListView(
             children: [
               CampoTexto(
-                rotulo: 'Nome',
-                dica: 'Identificador da bike - número ou nome',
+                controle: _nomeControlador,
+                rotulo: 'Nome da Bike',
+                dica: 'Nome identificador da bike',
                 eObrigatorio: true,
-                onChanged: (value) => _nome = value,
+                aoAlterar: (value) => _nome = value,
               ),
               const SizedBox(height: 16),
               CampoTexto(
+                controle: _numeroSerieControlador,
                 rotulo: 'Número de Série',
-                dica: 'é opcional',
+                dica: 'Número de série da bike',
                 eObrigatorio: false,
-                onChanged: (value) => _numeroSerie = value,
+                aoAlterar: (value) => _numeroSerie = value,
               ),
               const SizedBox(height: 16),
               CampoOpcoes<DTOFabricante>(
@@ -126,14 +138,14 @@ class _FormBikeState extends State<FormBike> {
                 rotulo: 'Fabricante',
                 textoPadrao: 'Selecione um fabricante',
                 rotaCadastro: Rotas.cadastroFabricante,
-                onChanged: (fabricante) => setState(() => _fabricanteSelecionado = fabricante),
+                aoAlterar: (fabricante) => setState(() => _fabricanteSelecionado = fabricante),
               ),
               const SizedBox(height: 16),
               CampoData(
-                label: 'Data de Cadastro',
+                rotulo: 'Data de Cadastro',
                 valor: _dataCadastro,
                 eObrigatorio: true,
-                onChanged: (data) {
+                aoAlterar: (data) {
                   setState(() {
                     _dataCadastro = data;
                   });

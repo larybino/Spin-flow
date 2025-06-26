@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 
 class CampoData extends StatefulWidget {
-  final String label;
+  final String rotulo;
   final DateTime? valor;
+  final String mensagemErro;
   final bool eObrigatorio;
-  final ValueChanged<DateTime?> onChanged;
+  final String? Function(DateTime?)? validador;
+  final void Function(DateTime?) aoAlterar;
 
   const CampoData({
     super.key,
-    required this.label,
+    required this.rotulo,
     this.valor,
+    this.mensagemErro = 'Informe a data',
     this.eObrigatorio = false,
-    required this.onChanged,
+    this.validador,
+    required this.aoAlterar,
   });
 
   @override
@@ -37,13 +41,16 @@ class _CampoDataState extends State<CampoData> {
     );
     if (data != null) {
       setState(() => _dataSelecionada = data);
-      widget.onChanged(data);
+      widget.aoAlterar(data);
     }
   }
 
   String? _validarData(DateTime? data) {
+    if (widget.validador != null) {
+      return widget.validador!(data);
+    }
     if (widget.eObrigatorio && data == null) {
-      return 'Informe ${widget.label.toLowerCase()}';
+      return widget.mensagemErro;
     }
     return null;
   }
@@ -61,7 +68,7 @@ class _CampoDataState extends State<CampoData> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.label),
+            Text(widget.rotulo),
             const SizedBox(height: 6),
             InkWell(
               onTap: _selecionarData,

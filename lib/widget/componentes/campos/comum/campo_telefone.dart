@@ -3,23 +3,30 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:spin_flow/configuracoes/erro.dart';
 
 class CampoTelefone extends StatelessWidget {
+  // 1. Atributos públicos
   final TextEditingController? controle;
+  final String? valorInicial;
   final String rotulo;
   final String dica;
-  final String? Function(String?)? validator;
+  final String mensagemErro;
   final bool eObrigatorio;
-  final void Function(String)? onChanged;
+  final String? Function(String?)? validador;
+  final void Function(String)? aoAlterar;
 
+  // 2. Construtor
   const CampoTelefone({
     super.key,
     this.controle,
+    this.valorInicial,
     this.rotulo = 'Telefone',
     this.dica = '(00) 00000-0000',
-    this.validator,
+    this.mensagemErro = Erro.telefoneInvalido,
     this.eObrigatorio = true,
-    this.onChanged,
+    this.validador,
+    this.aoAlterar,
   });
 
+  // 3. Métodos override
   @override
   Widget build(BuildContext context) {
     final mascara = MaskTextInputFormatter(
@@ -28,7 +35,8 @@ class CampoTelefone extends StatelessWidget {
     );
 
     return TextFormField(
-      controller: controle,
+      controller: _definirController(),
+      initialValue: valorInicial,
       keyboardType: TextInputType.phone,
       inputFormatters: [mascara],
       decoration: InputDecoration(
@@ -36,18 +44,30 @@ class CampoTelefone extends StatelessWidget {
         hintText: dica,
         prefixIcon: const Icon(Icons.phone),
       ),
-      validator: validator ?? (value) {
-        if (value == null || value.trim().isEmpty) {
-          if (eObrigatorio) return 'Informe o telefone';
-        } else {
-          // Remove caracteres não numéricos para validação
-          final numeros = value.replaceAll(RegExp(r'[^\d]'), '');
-          if (numeros.length < 10 || numeros.length > 11) return Erro.telefoneInvalido;
-        }
-        return null;
-      },
-      onChanged: onChanged,
+      validator: (valor) => _validarCampo(valor),
+      onChanged: aoAlterar,
       autofillHints: const [AutofillHints.telephoneNumber],
     );
+  }
+
+  // 5. Métodos privados importantes
+  TextEditingController? _definirController() {
+    // Se valorInicial for fornecido, não usar controller para evitar conflito
+    return valorInicial != null ? null : controle;
+  }
+
+  String? _validarCampo(String? valor) {
+    if (validador != null) {
+      return validador!(valor);
+    }
+    if (eObrigatorio && (valor == null || valor.trim().isEmpty)) {
+      return mensagemErro;
+    }
+    if (valor != null && valor.isNotEmpty) {
+      // Remove caracteres não numéricos para validação
+      final numeros = valor.replaceAll(RegExp(r'[^\d]'), '');
+      if (numeros.length < 10 || numeros.length > 11) return Erro.telefoneInvalido;
+    }
+    return null;
   }
 }

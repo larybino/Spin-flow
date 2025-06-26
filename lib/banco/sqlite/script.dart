@@ -6,6 +6,10 @@ class ScriptSQLite {
     CREATE TABLE fabricante (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nome TEXT NOT NULL,
+      descricao TEXT,
+      nome_contato_principal TEXT,
+      email_contato TEXT,
+      telefone_contato TEXT,
       ativo INTEGER NOT NULL DEFAULT 1
     )
   ''';
@@ -14,6 +18,7 @@ class ScriptSQLite {
     CREATE TABLE categoria_musica (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nome TEXT NOT NULL,
+      descricao TEXT,
       ativa INTEGER NOT NULL DEFAULT 1
     )
   ''';
@@ -54,6 +59,18 @@ class ScriptSQLite {
     )
   ''';
 
+  static const String _criarTabelaSala = '''
+    CREATE TABLE sala (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      numero_bikes INTEGER NOT NULL,
+      numero_filas INTEGER NOT NULL,
+      limite_bikes_por_fila INTEGER NOT NULL,
+      grade_bikes TEXT,
+      ativa INTEGER NOT NULL DEFAULT 1
+    )
+  ''';
+
   // Variável pública com todos os comandos de criação
   static const List<String> comandosCriarTabelas = [
     _criarTabelaFabricante,
@@ -61,6 +78,7 @@ class ScriptSQLite {
     _criarTabelaTipoManutencao,
     _criarTabelaArtistaBanda,
     _criarTabelaAluno,
+    _criarTabelaSala,
   ];
 
   // ===== COMANDOS DE INSERÇÃO =====
@@ -114,6 +132,13 @@ class ScriptSQLite {
     "INSERT INTO aluno (nome, email, data_nascimento, genero, telefone, url_foto, instagram, facebook, tiktok, observacoes, ativo) VALUES ('Lucia Ferreira', 'lucia.ferreira@email.com', '1995-07-08', 'feminino', '(11) 99999-5555', 'https://example.com/lucia.jpg', 'https://instagram.com/lucia.ferreira', 'https://facebook.com/lucia.ferreira', 'https://tiktok.com/@lucia.ferreira', 'Aluna nova', 1)",
   ];
 
+  // Inserções para Sala
+  static const List<String> _insercoesSala = [
+    "INSERT INTO sala (nome, numero_bikes, numero_filas, limite_bikes_por_fila, grade_bikes, ativa) VALUES ('Sala Principal', 20, 4, 5, '[[0,0,1,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]', 1)",
+    "INSERT INTO sala (nome, numero_bikes, numero_filas, limite_bikes_por_fila, grade_bikes, ativa) VALUES ('Sala VIP', 12, 3, 4, '[[0,0,1,0],[1,1,1,1],[1,1,1,1],[1,1,1,1]]', 1)",
+    "INSERT INTO sala (nome, numero_bikes, numero_filas, limite_bikes_por_fila, grade_bikes, ativa) VALUES ('Sala Iniciantes', 15, 3, 5, '[[0,0,1,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]', 1)",
+  ];
+
   // Variável pública com todas as inserções
   static const List<List<String>> comandosInsercoes = [
     _insercoesFabricante,
@@ -121,5 +146,6 @@ class ScriptSQLite {
     _insercoesTipoManutencao,
     _insercoesArtistaBanda,
     _insercoesAluno,
+    _insercoesSala,
   ];
 } 

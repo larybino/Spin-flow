@@ -5,7 +5,7 @@ import 'package:spin_flow/dto/dto_musica.dart';
 import 'package:spin_flow/configuracoes/rotas.dart';
 import 'package:spin_flow/widget/componentes/campos/selecao_multipla/campo_multi_selecao.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
-import 'package:spin_flow/widget/componentes/campos/comum/campo_opcoes.dart';
+import 'package:spin_flow/widget/componentes/campos/selecao_unica/campo_opcoes.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_url.dart';
 import 'package:spin_flow/banco/mock/mock_artistas_bandas.dart';
 import 'package:spin_flow/banco/mock/mock_categorias_musica.dart';
@@ -18,7 +18,7 @@ class FormMusica extends StatefulWidget {
 }
 
 class _FormMusicaState extends State<FormMusica> {
-  final _formKey = GlobalKey<FormState>();
+  final _chaveFormulario = GlobalKey<FormState>();
 
   // Campos do formulário
   String? _nome;
@@ -51,7 +51,7 @@ class _FormMusicaState extends State<FormMusica> {
     });
   }
 
-  void _limparFormulario() {
+  void _limparCampos() {
     setState(() {
       _nome = null;
       _artistaSelecionado = null;
@@ -59,43 +59,53 @@ class _FormMusicaState extends State<FormMusica> {
       _links.clear();
       _descricao = null;
     });
-    _formKey.currentState?.reset();
+    _chaveFormulario.currentState?.reset();
+  }
+
+  DTOMusica _criarDTO() {
+    final links = _links
+        .where((link) => link['url'] != null && link['url']!.isNotEmpty)
+        .map((link) => DTOLinkVideoAula(
+              url: link['url']!,
+              descricao: link['descricao'] ?? '',
+            ))
+        .toList();
+    return DTOMusica(
+      id: 0,
+      nome: _nome ?? '',
+      artista: _artistaSelecionado!,
+      categorias: List.from(_categoriasSelecionadas),
+      linksVideoAula: links,
+      descricao: _descricao,
+    );
+  }
+
+  void _mostrarMensagem(String mensagem, {bool erro = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: erro ? Colors.red : Colors.green,
+      ),
+    );
+  }
+
+  void _redirecionarAposSalvar() {
+    _limparCampos();
   }
 
   void _salvar() {
-    if (_formKey.currentState!.validate()) {
+    if (_chaveFormulario.currentState!.validate()) {
       if (_artistaSelecionado == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecione o artista/banda')),
-        );
+        _mostrarMensagem('Selecione o artista/banda', erro: true);
         return;
       }
       if (_categoriasSelecionadas.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecione pelo menos uma categoria')),
-        );
+        _mostrarMensagem('Selecione pelo menos uma categoria', erro: true);
         return;
       }
-
-      final links = _links
-          .where((link) => link['url'] != null && link['url']!.isNotEmpty)
-          .map((link) => DTOLinkVideoAula(
-                url: link['url']!,
-                descricao: link['descricao'] ?? '',
-              ))
-          .toList();
-
-      // Criar DTO
-      final dto = DTOMusica(
-        id: 0,
-        nome: _nome ?? '',
-        artista: _artistaSelecionado!,
-        categorias: List.from(_categoriasSelecionadas),
-        linksVideoAula: links,
-        descricao: _descricao,
-      );
-
-      // Mostrar dados em dialog
+      final dto = _criarDTO();
+      debugPrint(dto.toString());
+      //final dao = DAOMusica(); 
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -137,14 +147,8 @@ class _FormMusicaState extends State<FormMusica> {
           ],
         ),
       );
-
-      // SnackBar de sucesso
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Música "${dto.nome}" salva com sucesso!')),
-      );
-
-      // Limpar formulário
-      _limparFormulario();
+      _mostrarMensagem('Música "${dto.nome}" salva com sucesso!');
+      _redirecionarAposSalvar();
     }
   }
 
@@ -164,14 +168,14 @@ class _FormMusicaState extends State<FormMusica> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
-          key: _formKey,
+          key: _chaveFormulario,
           child: ListView(
             children: [
               CampoTexto(
                 rotulo: 'Nome da Música',
                 dica: 'Nome da música',
                 eObrigatorio: true,
-                onChanged: (value) => _nome = value,
+                aoAlterar: (value) => _nome = value,
               ),
               const SizedBox(height: 16),
               CampoOpcoes<DTOArtistaBanda>(
@@ -181,7 +185,7 @@ class _FormMusicaState extends State<FormMusica> {
                 textoPadrao: 'Selecione o artista/banda',
                 eObrigatorio: true,
                 rotaCadastro: Rotas.cadastroArtistaBanda,
-                onChanged: (artista) {
+                aoAlterar: (artista) {
                   setState(() {
                     _artistaSelecionado = artista;
                   });
@@ -190,8 +194,8 @@ class _FormMusicaState extends State<FormMusica> {
               const SizedBox(height: 16),
               CampoMultiSelecao<DTOCategoriaMusica>(
                 opcoes: _categoriasMock,
-                rotaCadastro: Rotas.cadastroCategoriaMusica,
                 valoresSelecionados: _categoriasSelecionadas,
+                rotaCadastro: Rotas.cadastroCategoriaMusica,
                 rotulo: 'Categorias de Música',
                 textoPadrao: 'Selecione categorias',
                 eObrigatorio: true,
@@ -220,7 +224,7 @@ class _FormMusicaState extends State<FormMusica> {
                           rotulo: 'Link do Vídeo Aula ${index + 1}',
                           dica: 'https://...',
                           eObrigatorio: false,
-                          onChanged: (value) => _atualizarLink(index, 'url', value),
+                          aoAlterar: (value) => _atualizarLink(index, 'url', value),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -230,7 +234,7 @@ class _FormMusicaState extends State<FormMusica> {
                           rotulo: 'Descrição',
                           dica: 'Ex: Playlist oficial',
                           eObrigatorio: false,
-                          onChanged: (value) => _atualizarLink(index, 'descricao', value),
+                          aoAlterar: (value) => _atualizarLink(index, 'descricao', value),
                         ),
                       ),
                       IconButton(
@@ -251,9 +255,13 @@ class _FormMusicaState extends State<FormMusica> {
               CampoTexto(
                 rotulo: 'Descrição',
                 dica: 'Descrição da música (opcional)',
-                maxLinhas: 3,
                 eObrigatorio: false,
-                onChanged: (value) => _descricao = value,
+                maxLinhas: 3,
+                aoAlterar: (value) => _descricao = value,
+              ),
+              ElevatedButton(
+                onPressed: _salvar,
+                child: const Text('Salvar'),
               ),
             ],
           ),

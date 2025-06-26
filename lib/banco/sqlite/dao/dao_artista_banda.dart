@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:spin_flow/banco/sqlite/conexao.dart';
 import 'package:spin_flow/dto/dto_artista_banda.dart';
 
@@ -6,7 +5,7 @@ class DAOArtistaBanda {
   static const String _tabela = 'artista_banda';
 
   // Salvar (inserir ou atualizar)
-  static Future<int> salvar(DTOArtistaBanda artista) async {
+  Future<int> salvar(DTOArtistaBanda artista) async {
     final db = await ConexaoSQLite.database;
     
     if (artista.id != null) {
@@ -39,7 +38,7 @@ class DAOArtistaBanda {
   }
 
   // Buscar todos
-  static Future<List<DTOArtistaBanda>> buscarTodos() async {
+  Future<List<DTOArtistaBanda>> buscarTodos() async {
     final db = await ConexaoSQLite.database;
     final List<Map<String, dynamic>> maps = await db.query(_tabela);
     
@@ -56,7 +55,7 @@ class DAOArtistaBanda {
   }
 
   // Buscar por ID
-  static Future<DTOArtistaBanda?> buscarPorId(int id) async {
+  Future<DTOArtistaBanda?> buscarPorId(int id) async {
     final db = await ConexaoSQLite.database;
     final List<Map<String, dynamic>> maps = await db.query(
       _tabela,
@@ -78,7 +77,7 @@ class DAOArtistaBanda {
   }
 
   // Excluir
-  static Future<int> excluir(int id) async {
+  Future<int> excluir(int id) async {
     final db = await ConexaoSQLite.database;
     return await db.delete(
       _tabela,

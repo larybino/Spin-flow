@@ -4,20 +4,24 @@ import 'package:spin_flow/dto/dto.dart';
 class CampoOpcoes<T extends DTO> extends StatefulWidget {
   final List<T> opcoes;
   final T? valorSelecionado;
-  final bool eObrigatorio;
-  final String textoPadrao;
   final String rotulo;
-  final void Function(T?)? onChanged;
-  final String rotaCadastro; // Nova rota para cadastrar
+  final String textoPadrao;
+  final String mensagemErro;
+  final bool eObrigatorio;
+  final String? Function(T?)? validador;
+  final void Function(T?)? aoAlterar;
+  final String rotaCadastro;
 
   const CampoOpcoes({
     super.key,
     required this.opcoes,
     this.valorSelecionado,
-    this.eObrigatorio = true,
-    this.textoPadrao = 'Escolha uma opção',
     required this.rotulo,
-    this.onChanged,
+    this.textoPadrao = 'Escolha uma opção',
+    this.mensagemErro = 'Selecione uma opção',
+    this.eObrigatorio = true,
+    this.validador,
+    this.aoAlterar,
     required this.rotaCadastro,
   });
 
@@ -37,8 +41,11 @@ class _CampoOpcoesState<T extends DTO> extends State<CampoOpcoes<T>> {
   }
 
   String? _validar(T? valor) {
+    if (widget.validador != null) {
+      return widget.validador!(valor);
+    }
     if (widget.eObrigatorio && valor == null) {
-      return 'Selecione uma opção';
+      return widget.mensagemErro;
     }
     return null;
   }
@@ -49,7 +56,7 @@ class _CampoOpcoesState<T extends DTO> extends State<CampoOpcoes<T>> {
       _opcoesCampo = List.from(widget.opcoes);
       if (novoItem != null) {
         _valorSelecionado = novoItem as T;
-        widget.onChanged?.call(_valorSelecionado); // Notifica o pai
+        widget.aoAlterar?.call(_valorSelecionado); // Notifica o pai
       }
     });
   }
@@ -69,7 +76,7 @@ class _CampoOpcoesState<T extends DTO> extends State<CampoOpcoes<T>> {
               setState(() {
                 _valorSelecionado = novoValor;
               });
-              widget.onChanged?.call(novoValor);
+              widget.aoAlterar?.call(novoValor);
             },
             items: [
               DropdownMenuItem<T>(
@@ -88,9 +95,7 @@ class _CampoOpcoesState<T extends DTO> extends State<CampoOpcoes<T>> {
           icon: const Icon(Icons.add),
           tooltip: 'Adicionar novo',
         ),
-        
       ],
     );
   }
-
 }

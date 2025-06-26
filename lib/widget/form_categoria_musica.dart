@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:spin_flow/dto/dto_categoria_musica.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_categoria_musica.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
+import 'package:spin_flow/configuracoes/rotas.dart';
 
 class FormCategoriaMusica extends StatefulWidget {
   const FormCategoriaMusica({super.key});
@@ -10,45 +12,75 @@ class FormCategoriaMusica extends StatefulWidget {
 }
 
 class _FormCategoriaMusicaState extends State<FormCategoriaMusica> {
-  final _formKey = GlobalKey<FormState>();
-  
-  // Campos do formulário
-  String? _nome;
-  String? _descricao;
+  final _chaveFormulario = GlobalKey<FormState>();
+  //final dao = DAOCategoriaMusica(); 
+  final DAOCategoriaMusica _daoCategoria = DAOCategoriaMusica();
+  int? _id;
+  bool _dadosCarregados = false;
+  bool _erroCarregamento = false;
+
+  final TextEditingController _nomeControlador = TextEditingController();
+  final TextEditingController _descricaoControlador = TextEditingController();
   bool _ativa = true;
 
-  void _limparFormulario() {
-    setState(() {
-      _nome = null;
-      _descricao = null;
-      _ativa = true;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarDadosEdicao();
     });
-    _formKey.currentState?.reset();
+  }
+
+  @override
+  void dispose() {
+    _nomeControlador.dispose();
+    _descricaoControlador.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_dadosCarregados && _id != null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_erroCarregamento) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Erro ao carregar categoria')),
+        body: const Center(child: Text('Não foi possível carregar os dados da categoria.')),
+      );
+    }
     return Scaffold(
-      appBar: AppBar(title: const Text('Nova Categoria de Música')),
+      appBar: AppBar(
+        title: Text(_id != null ? 'Editar Categoria' : 'Nova Categoria'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _salvar,
+            tooltip: 'Salvar',
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
-          key: _formKey,
+          key: _chaveFormulario,
           child: ListView(
             children: [
-              CampoTexto(    
+              CampoTexto(
+                controle: _nomeControlador,
                 rotulo: 'Nome',
                 dica: 'cadência, ritmo, coreografia, força, relaxamento, aquecimento',
                 eObrigatorio: true,
-                onChanged: (value) => _nome = value,
               ),
               const SizedBox(height: 16),
               CampoTexto(
+                controle: _descricaoControlador,
                 rotulo: 'Descrição',
                 dica: 'Descrição da coreografia\nExemplo para "Coreografia" → músicas que exigem coordenação motora e passos específicos',
                 maxLinhas: 3,
                 eObrigatorio: false,
-                onChanged: (value) => _descricao = value,
               ),
               const SizedBox(height: 16),
               SwitchListTile(
@@ -60,47 +92,7 @@ class _FormCategoriaMusicaState extends State<FormCategoriaMusica> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Criar DTO
-                    final dto = DTOCategoriaMusica(
-                      nome: _nome ?? '',
-                      descricao: _descricao,
-                      ativa: _ativa,
-                    );
-
-                    // Mostrar dados em dialog
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Categoria Criada'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Nome: ${dto.nome}'),
-                            Text('Descrição: ${dto.descricao ?? 'Não informado'}'),
-                            Text('Ativa: ${dto.ativa ? 'Sim' : 'Não'}'),
-                          ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Fechar'),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    // SnackBar de sucesso
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Categoria salva com sucesso! ${dto.nome}')),
-                    );
-
-                    // Limpar formulário
-                    _limparFormulario();
-                  }
-                },
+                onPressed: _salvar,
                 child: const Text('Salvar'),
               ),
             ],
@@ -109,9 +101,92 @@ class _FormCategoriaMusicaState extends State<FormCategoriaMusica> {
       ),
     );
   }
+
+  void _carregarDadosEdicao() {
+    final argumentos = ModalRoute.of(context)?.settings.arguments;
+    if (argumentos != null && argumentos is DTOCategoriaMusica) {
+      try {
+        _preencherCampos(argumentos);
+        setState(() {
+          _dadosCarregados = true;
+          _erroCarregamento = false;
+        });
+      } catch (e) {
+        setState(() {
+          _erroCarregamento = true;
+        });
+      }
+    } else {
+      setState(() {
+        _dadosCarregados = true;
+        _erroCarregamento = false;
+      });
+    }
+  }
+
+  void _preencherCampos(DTOCategoriaMusica categoria) {
+    _id = categoria.id;
+    _nomeControlador.text = categoria.nome;
+    _descricaoControlador.text = categoria.descricao ?? '';
+    _ativa = categoria.ativa;
+  }
+
+  void _limparCampos() {
+    _id = null;
+    _nomeControlador.clear();
+    _descricaoControlador.clear();
+    _ativa = true;
+    setState(() {});
+  }
+
+  DTOCategoriaMusica _criarDTO() {
+    return DTOCategoriaMusica(
+      id: _id,
+      nome: _nomeControlador.text,
+      descricao: _descricaoControlador.text.isEmpty ? null : _descricaoControlador.text,
+      ativa: _ativa,
+    );
+  }
+
+  void _mostrarMensagem(String mensagem, {bool erro = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: erro ? Colors.red : Colors.green,
+      ),
+    );
+  }
+
+  void _redirecionarAposSalvar() {
+    if (_id != null) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushReplacementNamed(Rotas.listaCategoriasMusica);
+    }
+  }
+
+  Future<void> _salvar() async {
+    if (_chaveFormulario.currentState!.validate()) {
+      try {
+        final dto = _criarDTO();
+        debugPrint(dto.toString());
+        //await _daoCategoria.salvar(dto); 
+        await _daoCategoria.salvar(dto);
+        if (!mounted) return;
+        _mostrarMensagem(_id != null ? 'Categoria atualizada com sucesso!' : 'Categoria criada com sucesso!');
+        if (_id == null) {
+          _limparCampos();
+        }
+        _redirecionarAposSalvar();
+      } catch (e) {
+        if (!mounted) return;
+        _mostrarMensagem('Erro ao salvar categoria: $e', erro: true);
+      }
+    }
+  }
 }
 
- /*
+/*
 Categorias para músicas (nomes sugestivos):
 Cadência — músicas que definem ritmo e velocidade do treino
 Coreografia — músicas que exigem coordenação motora e passos específicos
@@ -126,4 +201,4 @@ Aquecimento — músicas para preparar o corpo no início da aula
 Desaquecimento — músicas para finalização, relaxar e diminuir o esforço
 Explosão — músicas com batidas fortes para picos de esforço e sprint
 Core — músicas para exercícios focados na região do abdômen e tronco
-  */
+*/
