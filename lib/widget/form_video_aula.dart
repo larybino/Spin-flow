@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spin_flow/dto/dto_video_aula.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_video_aula.dart';
 
 class FormVideoAula extends StatefulWidget {
   final DTOVideoAula? videoAula;
@@ -30,18 +31,19 @@ class _FormVideoAulaState extends State<FormVideoAula> {
     super.dispose();
   }
 
-  void _salvar() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final dto = DTOVideoAula(
-        id: widget.videoAula?.id,
-        nome: _nomeController.text.trim(),
-        linkVideo: _linkController.text.trim().isEmpty ? null : _linkController.text.trim(),
-        ativo: _ativo,
-      );
-      debugPrint(dto.toString()); // Persistência real será implementada depois
-      Navigator.of(context).pop(dto);
-    }
+  void _salvar() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    final dto = DTOVideoAula(
+      id: widget.videoAula?.id,
+      nome: _nomeController.text.trim(),
+      linkVideo: _linkController.text.trim().isEmpty ? null : _linkController.text.trim(),
+      ativo: _ativo,
+    );
+    final dao = DAOVideoAula();
+    await dao.salvar(dto); // Salva no banco de dados
+    Navigator.of(context).pop(dto); // Retorna para a tela anterior
   }
+}
 
   @override
   Widget build(BuildContext context) {
