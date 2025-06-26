@@ -121,7 +121,7 @@ class _ListaSalasState extends State<ListaSalas> {
   void _editarSala(DTOSala sala) {
     Navigator.pushNamed(
       context,
-      '/rota-quebrada-cadastro-sala',
+      Rotas.cadastroSala,
       arguments: sala,
     ).then((_) => _carregarSalas());
   }
@@ -176,7 +176,7 @@ class _ListaSalasState extends State<ListaSalas> {
 
   Widget _botaoAdicionar() {
     return FloatingActionButton(
-      onPressed: () => Navigator.pushNamed(context, '/rota-quebrada-cadastro-sala')
+      onPressed: () => Navigator.pushNamed(context, Rotas.cadastroSala)
           .then((_) => _carregarSalas()),
       tooltip: 'Adicionar Sala',
       child: const Icon(Icons.add),
