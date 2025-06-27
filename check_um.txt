@@ -1,0 +1,15 @@
+Desafio 1: Implementar CRUD Real com SQLite para Vídeo-aula
+Criar o DAO para vídeo-aula (dao_video_aula.dart). ->Laryssa
+Adaptar o formulário e a lista para usar o DAO em vez do mock. -> Laryssa e Thalles
+Garantir que as operações de adicionar, editar, excluir e listar estejam funcionando com dados reais. -> Laryssa e Thalles
+Extra: arrumar redirecionamento de rotas -> Thalles
+
+Desafio 2: Corrigir Link relacionado a Salas 
+Fazer todas rotas relacionadas ao CRUD sala. -> Laryssa
+
+Desafio 3:Abastecer Dados de Seleção via DAO (Retirada de Mocks) -> Thalles
+
+Desafio 4: Implementar CRUD Completo de um Cadastro com Associação -> Laryssa
+
+
+Desafios finalizados: 4/4
