@@ -18,13 +18,13 @@ class _FormSalaState extends State<FormSala> {
   int? _id;
   bool _dadosCarregados = false;
   bool _erroCarregamento = false;
-  
+
   // Controllers para os campos
   final TextEditingController _nomeControlador = TextEditingController();
   final TextEditingController _numBikesControlador = TextEditingController();
   final TextEditingController _numFilasControlador = TextEditingController();
   final TextEditingController _limiteBikesControlador = TextEditingController();
-  
+
   // Campos do formulário
   bool _ativa = true;
 
@@ -48,14 +48,14 @@ class _FormSalaState extends State<FormSala> {
   @override
   Widget build(BuildContext context) {
     if (!_dadosCarregados && _id != null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_erroCarregamento) {
       return Scaffold(
         appBar: AppBar(title: const Text('Erro ao carregar sala')),
-        body: const Center(child: Text('Não foi possível carregar os dados da sala.')),
+        body: const Center(
+          child: Text('Não foi possível carregar os dados da sala.'),
+        ),
       );
     }
     return Scaffold(
@@ -91,9 +91,11 @@ class _FormSalaState extends State<FormSala> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Informe Nº de Bikes';
+                        if (value == null || value.isEmpty)
+                          return 'Informe Nº de Bikes';
                         final n = int.tryParse(value);
-                        if (n == null || n < 1) return 'Número positivo obrigatório';
+                        if (n == null || n < 1)
+                          return 'Número positivo obrigatório';
                         return null;
                       },
                     ),
@@ -106,9 +108,11 @@ class _FormSalaState extends State<FormSala> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Informe Nº de Filas';
+                        if (value == null || value.isEmpty)
+                          return 'Informe Nº de Filas';
                         final n = int.tryParse(value);
-                        if (n == null || n < 1) return 'Número positivo obrigatório';
+                        if (n == null || n < 1)
+                          return 'Número positivo obrigatório';
                         return null;
                       },
                     ),
@@ -118,7 +122,9 @@ class _FormSalaState extends State<FormSala> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _limiteBikesControlador,
-                decoration: const InputDecoration(labelText: 'Limite Bikes por Fila'),
+                decoration: const InputDecoration(
+                  labelText: 'Limite Bikes por Fila',
+                ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (value) {
@@ -137,10 +143,7 @@ class _FormSalaState extends State<FormSala> {
                 },
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _salvar,
-                child: const Text('Salvar'),
-              ),
+              ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
             ],
           ),
         ),
@@ -238,9 +241,9 @@ class _FormSalaState extends State<FormSala> {
   }
 
   void _redirecionarAposSalvar() {
-    // TODO: Implementar lógica de redirecionamento
-    // Se for edição (_id != null): voltar para tela anterior
-    // Se for novo item (_id == null): ir para lista de salas
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, Rotas.listaSalas);
+    }
   }
 
   Future<void> _salvar() async {
@@ -250,7 +253,11 @@ class _FormSalaState extends State<FormSala> {
         debugPrint(dto.toString());
         await _daoSala.salvar(dto);
         if (!mounted) return;
-        _mostrarMensagem(_id != null ? 'Sala atualizada com sucesso!' : 'Sala criada com sucesso!');
+        _mostrarMensagem(
+          _id != null
+              ? 'Sala atualizada com sucesso!'
+              : 'Sala criada com sucesso!',
+        );
         if (_id == null) {
           _limparCampos();
         }
