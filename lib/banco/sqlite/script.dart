@@ -80,6 +80,18 @@ class ScriptSQLite {
     )
   ''';
 
+   static const String _criarTabelaBike = '''
+    CREATE TABLE bike (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      numero_serie TEXT,
+      data_cadastro TEXT NOT NULL,
+      ativa INTEGER NOT NULL DEFAULT 1,
+      id_fabricante INTEGER NOT NULL,
+      FOREIGN KEY (id_fabricante) REFERENCES fabricante(id) 
+    )
+  ''';
+
   // Variável pública com todos os comandos de criação
   static const List<String> comandosCriarTabelas = [
     _criarTabelaFabricante,
@@ -89,6 +101,7 @@ class ScriptSQLite {
     _criarTabelaAluno,
     _criarTabelaSala,
     _criarTabelaVideoAula,
+    _criarTabelaBike,
   ];
 
   // ===== COMANDOS DE INSERÇÃO =====

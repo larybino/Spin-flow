@@ -5,7 +5,8 @@ import 'package:spin_flow/configuracoes/rotas.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_data.dart';
 import 'package:spin_flow/widget/componentes/campos/selecao_unica/campo_opcoes.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
-import 'package:spin_flow/banco/mock/mock_fabricantes.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_bike.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_fabricante.dart';
 
 class FormBike extends StatefulWidget {
   const FormBike({super.key});
@@ -16,87 +17,104 @@ class FormBike extends StatefulWidget {
 
 class _FormBikeState extends State<FormBike> {
   final _formKey = GlobalKey<FormState>();
-  
+
+  final DAOBike _daoBike = DAOBike();
+  final DAOFabricante _daoFabricante = DAOFabricante();
   // Campos do formulário
-  String? _nome;
-  String? _numeroSerie;
+  final TextEditingController _nomeControlador = TextEditingController();
+  final TextEditingController _numeroSerieControlador = TextEditingController();
   DTOFabricante? _fabricanteSelecionado;
   DateTime? _dataCadastro;
   bool _ativa = true;
+  int? _id;
 
-  final List<DTOFabricante> _fabricantes = mockFabricantes;
+  List<DTOFabricante> _fabricantes = [];
+  bool _carregandoFabricantes = true;
 
-  final TextEditingController _nomeControlador = TextEditingController();
-  final TextEditingController _numeroSerieControlador = TextEditingController();
-
-  void _limparFormulario() {
-    setState(() {
-      _nome = null;
-      _numeroSerie = null;
-      _fabricanteSelecionado = null;
-      _dataCadastro = null;
-      _ativa = true;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarDados();
     });
-    _formKey.currentState?.reset();
   }
 
-  void _salvar() {
+  Future<void> _carregarDados() async {
+    await _carregarFabricantesDoBanco();
+    _carregarDadosDaBikeParaEdicao();
+  }
+
+  Future<void> _carregarFabricantesDoBanco() async {
+    try {
+      final fabricantesDoBanco = await _daoFabricante.buscarTodos();
+      if (mounted) {
+        setState(() {
+          _fabricantes = fabricantesDoBanco;
+          _carregandoFabricantes = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _carregandoFabricantes = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar fabricantes: $e')),
+        );
+      }
+    }
+  }
+
+  void _carregarDadosDaBikeParaEdicao() {
+    final argumento = ModalRoute.of(context)?.settings.arguments;
+    if (argumento != null && argumento is DTOBike) {
+      final bikeParaEditar = argumento;
+      setState(() {
+        _id = bikeParaEditar.id;
+        _nomeControlador.text = bikeParaEditar.nome;
+        _numeroSerieControlador.text = bikeParaEditar.numeroSerie ?? '';
+        _dataCadastro = bikeParaEditar.dataCadastro;
+        _ativa = bikeParaEditar.ativa;
+        _fabricanteSelecionado = _fabricantes.firstWhere(
+          (f) => f.id == bikeParaEditar.fabricante.id,
+          orElse: () => _fabricantes.first, 
+        );
+      });
+    }
+  }
+
+  Future<void> _salvar() async {
     if (_formKey.currentState!.validate()) {
-      if (_fabricanteSelecionado == null) {
+      if (_fabricanteSelecionado == null || _dataCadastro == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecione um fabricante')),
+          const SnackBar(
+            content: Text('Preencha todos os campos obrigatórios'),
+          ),
         );
         return;
       }
 
-      if (_dataCadastro == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Informe a data de cadastro')),
-        );
-        return;
-      }
-
-      // Criar DTO
       final dto = DTOBike(
-        nome: _nome ?? '',
-        numeroSerie: _numeroSerie,
+        id: _id, 
+        nome: _nomeControlador.text,
+        numeroSerie: _numeroSerieControlador.text,
         fabricante: _fabricanteSelecionado!,
         dataCadastro: _dataCadastro!,
         ativa: _ativa,
       );
 
-      // Mostrar dados em dialog
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Bike Criada'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Nome: ${dto.nome}'),
-              Text('Número de Série: ${dto.numeroSerie ?? 'Não informado'}'),
-              Text('Fabricante: ${dto.fabricante.nome}'),
-              Text('Data de Cadastro: ${dto.dataCadastro.toString().split(' ')[0]}'),
-              Text('Ativa: ${dto.ativa ? 'Sim' : 'Não'}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Fechar'),
-            ),
-          ],
-        ),
-      );
-
-      // SnackBar de sucesso
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Bike salva com sucesso! ${dto.nome}')),
-      );
-
-      // Limpar formulário
-      _limparFormulario();
+      try {
+        await _daoBike.salvar(dto); 
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Bike "${dto.nome}" salva com sucesso!')),
+        );
+        Navigator.pushReplacementNamed(context, Rotas.listaBikes);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erro ao salvar bike: $e')));
+        }
+      }
     }
   }
 
@@ -110,7 +128,7 @@ class _FormBikeState extends State<FormBike> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cadastro de Bike')),
+      appBar: AppBar(title: Text(_id == null ? 'Cadastro de Bike' : 'Editar Bike')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -122,7 +140,6 @@ class _FormBikeState extends State<FormBike> {
                 rotulo: 'Nome da Bike',
                 dica: 'Nome identificador da bike',
                 eObrigatorio: true,
-                aoAlterar: (value) => _nome = value,
               ),
               const SizedBox(height: 16),
               CampoTexto(
@@ -130,15 +147,17 @@ class _FormBikeState extends State<FormBike> {
                 rotulo: 'Número de Série',
                 dica: 'Número de série da bike',
                 eObrigatorio: false,
-                aoAlterar: (value) => _numeroSerie = value,
               ),
               const SizedBox(height: 16),
-              CampoOpcoes<DTOFabricante>(
+              _carregandoFabricantes 
+                ? const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator()))
+                : CampoOpcoes<DTOFabricante>(
                 opcoes: _fabricantes,
                 rotulo: 'Fabricante',
                 textoPadrao: 'Selecione um fabricante',
                 rotaCadastro: Rotas.cadastroFabricante,
-                aoAlterar: (fabricante) => setState(() => _fabricanteSelecionado = fabricante),
+                aoAlterar: (fabricante) =>
+                    setState(() => _fabricanteSelecionado = fabricante),
               ),
               const SizedBox(height: 16),
               CampoData(
@@ -162,10 +181,7 @@ class _FormBikeState extends State<FormBike> {
                 },
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _salvar,
-                child: const Text('Salvar'),
-              ),
+              ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
             ],
           ),
         ),

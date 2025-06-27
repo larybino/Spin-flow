@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:spin_flow/banco/mock/mock_bikes.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_bike.dart';
 import 'package:spin_flow/dto/dto_bike.dart';
 import 'package:spin_flow/configuracoes/rotas.dart';
 
@@ -11,30 +11,37 @@ class ListaBikes extends StatefulWidget {
 }
 
 class _ListaBikesState extends State<ListaBikes> {
-  List<DTOBike> _bikes = [];
-  bool _carregando = true;
+  final DAOBike _daoBike = DAOBike();
 
-  @override
-  void initState() {
-    super.initState();
-    _carregarBikes();
+  void _recarregarDados() {
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bikes'),
-        actions: [_botaoRecarregar()],
+      appBar: AppBar(title: const Text('Bikes'), actions: [_botaoRecarregar()]),
+      body: FutureBuilder<List<DTOBike>>(
+        future: _daoBike.listar(), 
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Erro ao carregar bikes: ${snapshot.error}'),
+            );
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return _widgetSemDados();
+          }
+          final bikes = snapshot.data!;
+          return ListView.builder(
+            itemCount: bikes.length,
+            itemBuilder: (context, index) => _itemListaBike(bikes[index]),
+          );
+        },
       ),
-      body: _carregando
-          ? const Center(child: CircularProgressIndicator())
-          : _bikes.isEmpty
-              ? _widgetSemDados()
-              : ListView.builder(
-                  itemCount: _bikes.length,
-                  itemBuilder: (context, index) => _itemListaBike(_bikes[index]),
-                ),
       floatingActionButton: _botaoAdicionar(),
     );
   }
@@ -45,38 +52,14 @@ class _ListaBikesState extends State<ListaBikes> {
 
   String _definirDetalhesDescricao(DTOBike bike) {
     final fabricante = 'Fabricante: ${bike.fabricante.nome}\n';
-    final numeroSerie = (bike.numeroSerie != null && bike.numeroSerie!.isNotEmpty)
+    final numeroSerie =
+        (bike.numeroSerie != null && bike.numeroSerie!.isNotEmpty)
         ? 'Número de Série: ${bike.numeroSerie}\n'
         : '';
-    final dataCadastro = 'Cadastrada em: ${bike.dataCadastro.toString().split(' ')[0]}\n';
+    final dataCadastro =
+        'Cadastrada em: ${bike.dataCadastro.toString().split(' ')[0]}\n';
     final status = bike.ativa ? 'Ativa' : 'Inativa';
     return '$fabricante$numeroSerie$dataCadastro$status';
-  }
-
-  Future<void> _carregarBikes() async {
-    setState(() {
-      _carregando = true;
-    });
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      final bikes = mockBikes;
-      setState(() {
-        _bikes = bikes;
-        _carregando = false;
-      });
-    } catch (e) {
-      setState(() {
-        _carregando = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao carregar bikes: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   Future<void> _excluirBike(DTOBike bike) async {
@@ -100,10 +83,7 @@ class _ListaBikesState extends State<ListaBikes> {
     );
     if (confirmacao == true) {
       try {
-        await Future.delayed(const Duration(milliseconds: 300));
-        setState(() {
-          _bikes.removeWhere((b) => b.id == bike.id);
-        });
+        await _daoBike.excluir(bike.id!); 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -111,6 +91,7 @@ class _ListaBikesState extends State<ListaBikes> {
               backgroundColor: Colors.green,
             ),
           );
+          _recarregarDados(); 
         }
       } catch (e) {
         if (mounted) {
@@ -130,7 +111,17 @@ class _ListaBikesState extends State<ListaBikes> {
       context,
       Rotas.cadastroBike,
       arguments: bike,
-    ).then((_) => _carregarBikes());
+    ).then((_) => _recarregarDados());
+  }
+
+  Widget _botaoAdicionar() {
+    return FloatingActionButton(
+      onPressed: () => Navigator.pushNamed(context, Rotas.cadastroBike).then(
+        (_) => _recarregarDados(),
+      ), 
+      tooltip: 'Adicionar Bike',
+      child: const Icon(Icons.add),
+    );
   }
 
   Widget _widgetSemDados() {
@@ -138,9 +129,16 @@ class _ListaBikesState extends State<ListaBikes> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.directions_bike_outlined, size: 64, color: Colors.grey),
+          const Icon(
+            Icons.directions_bike_outlined,
+            size: 64,
+            color: Colors.grey,
+          ),
           const SizedBox(height: 16),
-          const Text('Nenhuma bike cadastrada', style: TextStyle(fontSize: 18, color: Colors.grey)),
+          const Text(
+            'Nenhuma bike cadastrada',
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
           const SizedBox(height: 16),
           _botaoAdicionar(),
         ],
@@ -181,20 +179,12 @@ class _ListaBikesState extends State<ListaBikes> {
     );
   }
 
-  Widget _botaoAdicionar() {
-    return FloatingActionButton(
-      onPressed: () => Navigator.pushNamed(context, Rotas.cadastroBike)
-          .then((_) => _carregarBikes()),
-      tooltip: 'Adicionar Bike',
-      child: const Icon(Icons.add),
-    );
-  }
 
   Widget _botaoRecarregar() {
     return IconButton(
       icon: const Icon(Icons.refresh),
-      onPressed: _carregarBikes,
+      onPressed: _recarregarDados,
       tooltip: 'Recarregar',
     );
   }
-} 
+}
