@@ -4,7 +4,7 @@ import 'package:spin_flow/dto/dto_aluno.dart';
 import 'package:spin_flow/configuracoes/rotas.dart';
 import 'package:spin_flow/widget/componentes/campos/selecao_multipla/campo_busca_multipla.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
-import 'package:spin_flow/banco/mock/mock_alunos.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_aluno.dart';
 
 class FormGrupoAlunos extends StatefulWidget {
   const FormGrupoAlunos({super.key});
@@ -22,6 +22,23 @@ class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
   String? _nome;
   String? _descricao;
   List<DTOAluno> _alunosSelecionados = [];
+  List<DTOAluno> _alunosDisponiveis = [];
+  bool _carregandoAlunos = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarAlunos();
+  }
+
+  Future<void> _carregarAlunos() async {
+    final dao = DAOAluno();
+    final lista = await dao.buscarTodos();
+    setState(() {
+      _alunosDisponiveis = lista;
+      _carregandoAlunos = false;
+    });
+  }
 
   // Função para validar que há pelo menos 1 aluno selecionado
   String? _validaAlunosSelecionados() {
@@ -65,9 +82,12 @@ class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
                 Text('Nome: ${dto.nome}'),
                 Text('Descrição: ${dto.descricao ?? 'Não informado'}'),
                 const SizedBox(height: 8),
-                Text('Alunos (${dto.alunos.length}):', style: const TextStyle(fontWeight: FontWeight.bold)),
-                ...dto.alunos.map((aluno) => 
-                  Padding(
+                Text(
+                  'Alunos (${dto.alunos.length}):',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                ...dto.alunos.map(
+                  (aluno) => Padding(
                     padding: const EdgeInsets.only(left: 8, top: 2),
                     child: Text('• ${aluno.nome}'),
                   ),
@@ -93,9 +113,9 @@ class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
       _limparFormulario();
     } else {
       if (!alunosValidos) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_validaAlunosSelecionados()!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_validaAlunosSelecionados()!)));
       }
     }
   }
@@ -110,9 +130,7 @@ class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cadastro de Grupo de Alunos'),
-      ),
+      appBar: AppBar(title: const Text('Cadastro de Grupo de Alunos')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -138,14 +156,17 @@ class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
               const SizedBox(height: 16),
               Text('Alunos'),
               const SizedBox(height: 8),
-              CampoBuscaMultipla<DTOAluno>(
-                opcoes: mockAlunos,
-                valoresSelecionados: _alunosSelecionados,
-                rotulo: 'Alunos do Grupo',
-                textoPadrao: 'Digite para buscar alunos...',
-                rotaCadastro: Rotas.cadastroAluno,
-                onChanged: (lista) => setState(() => _alunosSelecionados = lista),
-              ),
+              _carregandoAlunos
+                  ? const CircularProgressIndicator()
+                  : CampoBuscaMultipla<DTOAluno>(
+                      opcoes: _alunosDisponiveis,
+                      valoresSelecionados: _alunosSelecionados,
+                      rotulo: 'Alunos do Grupo',
+                      textoPadrao: 'Digite para buscar alunos...',
+                      rotaCadastro: Rotas.cadastroAluno,
+                      onChanged: (lista) =>
+                          setState(() => _alunosSelecionados = lista),
+                    ),
               const Spacer(),
               SizedBox(
                 width: double.infinity,
@@ -153,7 +174,7 @@ class _FormGrupoAlunosState extends State<FormGrupoAlunos> {
                   onPressed: _salvar,
                   child: const Text('Salvar'),
                 ),
-              )
+              ),
             ],
           ),
         ),

@@ -5,7 +5,7 @@ import 'package:spin_flow/configuracoes/rotas.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_data.dart';
 import 'package:spin_flow/widget/componentes/campos/selecao_unica/campo_opcoes.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
-import 'package:spin_flow/banco/mock/mock_fabricantes.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_fabricante.dart';
 
 class FormBike extends StatefulWidget {
   const FormBike({super.key});
@@ -16,7 +16,7 @@ class FormBike extends StatefulWidget {
 
 class _FormBikeState extends State<FormBike> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Campos do formulário
   String? _nome;
   String? _numeroSerie;
@@ -24,7 +24,23 @@ class _FormBikeState extends State<FormBike> {
   DateTime? _dataCadastro;
   bool _ativa = true;
 
-  final List<DTOFabricante> _fabricantes = mockFabricantes;
+  List<DTOFabricante> _fabricantes = [];
+  bool _carregandoFabricantes = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarFabricantes();
+  }
+
+  Future<void> _carregarFabricantes() async {
+    final dao = DAOFabricante();
+    final lista = await dao.buscarTodos();
+    setState(() {
+      _fabricantes = lista;
+      _carregandoFabricantes = false;
+    });
+  }
 
   final TextEditingController _nomeControlador = TextEditingController();
   final TextEditingController _numeroSerieControlador = TextEditingController();
@@ -77,7 +93,9 @@ class _FormBikeState extends State<FormBike> {
               Text('Nome: ${dto.nome}'),
               Text('Número de Série: ${dto.numeroSerie ?? 'Não informado'}'),
               Text('Fabricante: ${dto.fabricante.nome}'),
-              Text('Data de Cadastro: ${dto.dataCadastro.toString().split(' ')[0]}'),
+              Text(
+                'Data de Cadastro: ${dto.dataCadastro.toString().split(' ')[0]}',
+              ),
               Text('Ativa: ${dto.ativa ? 'Sim' : 'Não'}'),
             ],
           ),
@@ -133,13 +151,16 @@ class _FormBikeState extends State<FormBike> {
                 aoAlterar: (value) => _numeroSerie = value,
               ),
               const SizedBox(height: 16),
-              CampoOpcoes<DTOFabricante>(
-                opcoes: _fabricantes,
-                rotulo: 'Fabricante',
-                textoPadrao: 'Selecione um fabricante',
-                rotaCadastro: Rotas.cadastroFabricante,
-                aoAlterar: (fabricante) => setState(() => _fabricanteSelecionado = fabricante),
-              ),
+              _carregandoFabricantes
+                  ? const CircularProgressIndicator()
+                  : CampoOpcoes<DTOFabricante>(
+                      opcoes: _fabricantes,
+                      rotulo: 'Fabricante',
+                      textoPadrao: 'Selecione um fabricante',
+                      rotaCadastro: Rotas.cadastroFabricante,
+                      aoAlterar: (fabricante) =>
+                          setState(() => _fabricanteSelecionado = fabricante),
+                    ),
               const SizedBox(height: 16),
               CampoData(
                 rotulo: 'Data de Cadastro',
@@ -162,10 +183,7 @@ class _FormBikeState extends State<FormBike> {
                 },
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _salvar,
-                child: const Text('Salvar'),
-              ),
+              ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
             ],
           ),
         ),
