@@ -37,7 +37,7 @@ class ConexaoSQLite {
       path = join(databasesPath, 'spin_flow.db');
     }
     //deleteDatabase(path);
-    //await databaseFactory.deleteDatabase(path);
+    // await databaseFactory.deleteDatabase(path);
     // Abrir ou criar banco
     return await databaseFactory.openDatabase(
       path,

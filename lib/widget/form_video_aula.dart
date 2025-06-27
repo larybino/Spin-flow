@@ -20,7 +20,9 @@ class _FormVideoAulaState extends State<FormVideoAula> {
   void initState() {
     super.initState();
     _nomeController = TextEditingController(text: widget.videoAula?.nome ?? '');
-    _linkController = TextEditingController(text: widget.videoAula?.linkVideo ?? '');
+    _linkController = TextEditingController(
+      text: widget.videoAula?.linkVideo ?? '',
+    );
     _ativo = widget.videoAula?.ativo ?? true;
   }
 
@@ -32,24 +34,30 @@ class _FormVideoAulaState extends State<FormVideoAula> {
   }
 
   void _salvar() async {
-  if (_formKey.currentState?.validate() ?? false) {
-    final dto = DTOVideoAula(
-      id: widget.videoAula?.id,
-      nome: _nomeController.text.trim(),
-      linkVideo: _linkController.text.trim().isEmpty ? null : _linkController.text.trim(),
-      ativo: _ativo,
-    );
-    final dao = DAOVideoAula();
-    await dao.salvar(dto); // Salva no banco de dados
-    Navigator.of(context).pop(dto); // Retorna para a tela anterior
+    if (_formKey.currentState?.validate() ?? false) {
+      final dto = DTOVideoAula(
+        id: widget.videoAula?.id,
+        nome: _nomeController.text.trim(),
+        linkVideo: _linkController.text.trim().isEmpty
+            ? null
+            : _linkController.text.trim(),
+        ativo: _ativo,
+      );
+      final dao = DAOVideoAula();
+      await dao.salvar(dto); // Salva no banco de dados
+      Navigator.of(context).popUntil(
+        ModalRoute.withName('/lista-video-aula'),
+      ); // Troque pelo nome da rota da lista // Retorna para a tela anterior
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.videoAula == null ? 'Nova Vídeo-aula' : 'Editar Vídeo-aula'),
+        title: Text(
+          widget.videoAula == null ? 'Nova Vídeo-aula' : 'Editar Vídeo-aula',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -104,4 +112,4 @@ class _FormVideoAulaState extends State<FormVideoAula> {
       ),
     );
   }
-} 
+}
