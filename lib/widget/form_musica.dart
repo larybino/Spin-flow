@@ -32,10 +32,7 @@ class _FormMusicaState extends State<FormMusica> {
 
   void _adicionarLink() {
     setState(() {
-      _links.add({
-        'url': null,
-        'descricao': null,
-      });
+      _links.add({'url': null, 'descricao': null});
     });
   }
 
@@ -65,10 +62,12 @@ class _FormMusicaState extends State<FormMusica> {
   DTOMusica _criarDTO() {
     final links = _links
         .where((link) => link['url'] != null && link['url']!.isNotEmpty)
-        .map((link) => DTOLinkVideoAula(
-              url: link['url']!,
-              descricao: link['descricao'] ?? '',
-            ))
+        .map(
+          (link) => DTOLinkVideoAula(
+            url: link['url']!,
+            descricao: link['descricao'] ?? '',
+          ),
+        )
         .toList();
     return DTOMusica(
       id: 0,
@@ -105,7 +104,7 @@ class _FormMusicaState extends State<FormMusica> {
       }
       final dto = _criarDTO();
       debugPrint(dto.toString());
-      //final dao = DAOMusica(); 
+      //final dao = DAOMusica();
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -119,18 +118,24 @@ class _FormMusicaState extends State<FormMusica> {
                 Text('Artista: ${dto.artista.nome}'),
                 Text('Descrição: ${dto.descricao ?? 'Não informado'}'),
                 const SizedBox(height: 8),
-                Text('Categorias (${dto.categorias.length}):', style: const TextStyle(fontWeight: FontWeight.bold)),
-                ...dto.categorias.map((cat) => 
-                  Padding(
+                Text(
+                  'Categorias (${dto.categorias.length}):',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                ...dto.categorias.map(
+                  (cat) => Padding(
                     padding: const EdgeInsets.only(left: 8, top: 2),
                     child: Text('• ${cat.nome}'),
                   ),
                 ),
                 if (dto.linksVideoAula.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text('Links de Vídeo Aula (${dto.linksVideoAula.length}):', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ...dto.linksVideoAula.map((link) => 
-                    Padding(
+                  Text(
+                    'Links de Vídeo Aula (${dto.linksVideoAula.length}):',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  ...dto.linksVideoAula.map(
+                    (link) => Padding(
                       padding: const EdgeInsets.only(left: 8, top: 2),
                       child: Text('• ${link.descricao}: ${link.url}'),
                     ),
@@ -208,9 +213,7 @@ class _FormMusicaState extends State<FormMusica> {
                 },
               ),
               const SizedBox(height: 24),
-              Text(
-                'Links de Vídeo Aula (opcional)',
-              ),
+              Text('Links de Vídeo Aula (opcional)'),
               const SizedBox(height: 8),
               ..._links.asMap().entries.map((entry) {
                 int index = entry.key;
@@ -224,7 +227,8 @@ class _FormMusicaState extends State<FormMusica> {
                           rotulo: 'Link do Vídeo Aula ${index + 1}',
                           dica: 'https://...',
                           eObrigatorio: false,
-                          aoAlterar: (value) => _atualizarLink(index, 'url', value),
+                          aoAlterar: (value) =>
+                              _atualizarLink(index, 'url', value),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -234,7 +238,8 @@ class _FormMusicaState extends State<FormMusica> {
                           rotulo: 'Descrição',
                           dica: 'Ex: Playlist oficial',
                           eObrigatorio: false,
-                          aoAlterar: (value) => _atualizarLink(index, 'descricao', value),
+                          aoAlterar: (value) =>
+                              _atualizarLink(index, 'descricao', value),
                         ),
                       ),
                       IconButton(
@@ -259,10 +264,7 @@ class _FormMusicaState extends State<FormMusica> {
                 maxLinhas: 3,
                 aoAlterar: (value) => _descricao = value,
               ),
-              ElevatedButton(
-                onPressed: _salvar,
-                child: const Text('Salvar'),
-              ),
+              ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
             ],
           ),
         ),

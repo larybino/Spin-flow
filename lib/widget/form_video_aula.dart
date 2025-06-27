@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spin_flow/dto/dto_video_aula.dart';
 import 'package:spin_flow/banco/sqlite/dao/dao_video_aula.dart';
+import 'package:spin_flow/configuracoes/rotas.dart';
 
 class FormVideoAula extends StatefulWidget {
   final DTOVideoAula? videoAula;
@@ -45,8 +46,9 @@ class _FormVideoAulaState extends State<FormVideoAula> {
       );
       final dao = DAOVideoAula();
       await dao.salvar(dto); // Salva no banco de dados
-      Navigator.of(context).popUntil(
-        ModalRoute.withName('/lista-video-aula'),
+      Navigator.pushNamed(
+        context,
+        Rotas.listaVideoAula,
       ); // Troque pelo nome da rota da lista // Retorna para a tela anterior
     }
   }
