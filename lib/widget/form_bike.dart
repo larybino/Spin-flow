@@ -182,6 +182,7 @@ class _FormBikeState extends State<FormBike> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
+              ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
             ],
           ),
         ),

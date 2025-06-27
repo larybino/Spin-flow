@@ -6,7 +6,7 @@ import 'package:spin_flow/widget/componentes/campos/comum/campo_hora.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_numero.dart';
 import 'package:spin_flow/widget/componentes/campos/selecao_unica/campo_opcoes.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
-import 'package:spin_flow/banco/mock/mock_salas.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_sala.dart'; // Adicione este import
 
 import 'componentes/campos/selecao_multipla/campo_dias_semana.dart';
 
@@ -34,11 +34,24 @@ class _FormTurmaState extends State<FormTurma> {
   final TextEditingController _nomeControlador = TextEditingController();
   final TextEditingController _descricaoControlador = TextEditingController();
 
+  List<DTOSala> _salas = [];
+  bool _carregandoSalas = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarSalas();
       _carregarDadosEdicao();
+    });
+  }
+
+  Future<void> _carregarSalas() async {
+    final dao = DAOSala();
+    final lista = await dao.buscarTodos();
+    setState(() {
+      _salas = lista;
+      _carregandoSalas = false;
     });
   }
 
@@ -52,18 +65,20 @@ class _FormTurmaState extends State<FormTurma> {
   @override
   Widget build(BuildContext context) {
     if (!_dadosCarregados && _id != null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_erroCarregamento) {
       return Scaffold(
         appBar: AppBar(title: const Text('Erro ao carregar turma')),
-        body: const Center(child: Text('Não foi possível carregar os dados da turma.')),
+        body: const Center(
+          child: Text('Não foi possível carregar os dados da turma.'),
+        ),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(_id != null ? 'Editar Turma' : 'Cadastro de Turma')),
+      appBar: AppBar(
+        title: Text(_id != null ? 'Editar Turma' : 'Cadastro de Turma'),
+      ),
       body: Form(
         key: _chaveFormulario,
         child: SingleChildScrollView(
@@ -91,7 +106,9 @@ class _FormTurmaState extends State<FormTurma> {
                 diasSelecionados: _diasSelecionados,
                 rotulo: 'Dias da Semana',
                 eObrigatorio: true,
-                validador: (dias) => dias.isEmpty ? 'Selecione pelo menos um dia da semana' : null,
+                validador: (dias) => dias.isEmpty
+                    ? 'Selecione pelo menos um dia da semana'
+                    : null,
                 aoAlterar: (List<String> novosDias) {
                   setState(() {
                     _diasSelecionados = novosDias;
@@ -118,17 +135,19 @@ class _FormTurmaState extends State<FormTurma> {
                 aoAlterar: (value) => _duracao = value,
               ),
               const SizedBox(height: 16),
-              CampoOpcoes<DTOSala>(
-                opcoes: mockSalas,
-                valorSelecionado: _salaSelecionada,
-                rotulo: 'Sala / Local da aula',
-                rotaCadastro: Rotas.cadastroSala,
-                aoAlterar: (DTOSala? novaSala) {
-                  setState(() {
-                    _salaSelecionada = novaSala;
-                  });
-                },
-              ),
+              _carregandoSalas
+                  ? const CircularProgressIndicator()
+                  : CampoOpcoes<DTOSala>(
+                      opcoes: _salas,
+                      valorSelecionado: _salaSelecionada,
+                      rotulo: 'Sala / Local da aula',
+                      rotaCadastro: Rotas.cadastroSala,
+                      aoAlterar: (DTOSala? novaSala) {
+                        setState(() {
+                          _salaSelecionada = novaSala;
+                        });
+                      },
+                    ),
               const SizedBox(height: 16),
               CheckboxListTile(
                 title: const Text('Ativo'),
@@ -179,7 +198,9 @@ class _FormTurmaState extends State<FormTurma> {
     _descricao = turma.descricao;
     _diasSelecionados = List<String>.from(turma.diasSemana);
     _horarioInicio = turma.horarioInicio;
-    _duracao = turma.duracaoMinutos > 0 ? turma.duracaoMinutos.toString() : null;
+    _duracao = turma.duracaoMinutos > 0
+        ? turma.duracaoMinutos.toString()
+        : null;
     _salaSelecionada = turma.sala;
     _ativo = turma.ativo;
   }
@@ -228,7 +249,10 @@ class _FormTurmaState extends State<FormTurma> {
 
   Future<void> _salvar() async {
     if (_chaveFormulario.currentState!.validate() == false) return;
-    if ((_nome ?? '').isEmpty || _diasSelecionados.isEmpty || (_horarioInicio == null || _horarioInicio!.isEmpty) || _salaSelecionada == null) {
+    if ((_nome ?? '').isEmpty ||
+        _diasSelecionados.isEmpty ||
+        (_horarioInicio == null || _horarioInicio!.isEmpty) ||
+        _salaSelecionada == null) {
       _mostrarMensagem('Preencha todos os campos obrigatórios.', erro: true);
       return;
     }
@@ -237,7 +261,11 @@ class _FormTurmaState extends State<FormTurma> {
       debugPrint(dto.toString());
       await Future.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
-      _mostrarMensagem(_id != null ? 'Turma atualizada com sucesso!' : 'Turma criada com sucesso!');
+      _mostrarMensagem(
+        _id != null
+            ? 'Turma atualizada com sucesso!'
+            : 'Turma criada com sucesso!',
+      );
       if (_id == null) {
         _limparCampos();
       }

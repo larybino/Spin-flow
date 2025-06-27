@@ -7,8 +7,8 @@ import 'package:spin_flow/widget/componentes/campos/selecao_multipla/campo_multi
 import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
 import 'package:spin_flow/widget/componentes/campos/selecao_unica/campo_opcoes.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_url.dart';
-import 'package:spin_flow/banco/mock/mock_artistas_bandas.dart';
-import 'package:spin_flow/banco/mock/mock_categorias_musica.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_artista_banda.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_categoria_musica.dart';
 
 class FormMusica extends StatefulWidget {
   const FormMusica({super.key});
@@ -27,8 +27,35 @@ class _FormMusicaState extends State<FormMusica> {
   final List<Map<String, String?>> _links = [];
   String? _descricao;
 
-  final List<DTOArtistaBanda> _artistasMock = mockArtistasBandas;
-  final List<DTOCategoriaMusica> _categoriasMock = mockCategoriasMusica;
+  List<DTOArtistaBanda> _artistas = [];
+  List<DTOCategoriaMusica> _categorias = [];
+  bool _carregandoArtistas = true;
+  bool _carregandoCategorias = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarArtistas();
+    _carregarCategorias();
+  }
+
+  Future<void> _carregarArtistas() async {
+    final dao = DAOArtistaBanda();
+    final lista = await dao.buscarTodos();
+    setState(() {
+      _artistas = lista;
+      _carregandoArtistas = false;
+    });
+  }
+
+  Future<void> _carregarCategorias() async {
+    final dao = DAOCategoriaMusica();
+    final lista = await dao.buscarTodos();
+    setState(() {
+      _categorias = lista;
+      _carregandoCategorias = false;
+    });
+  }
 
   void _adicionarLink() {
     setState(() {
@@ -183,35 +210,39 @@ class _FormMusicaState extends State<FormMusica> {
                 aoAlterar: (value) => _nome = value,
               ),
               const SizedBox(height: 16),
-              CampoOpcoes<DTOArtistaBanda>(
-                opcoes: _artistasMock,
-                valorSelecionado: _artistaSelecionado,
-                rotulo: 'Artista/Banda',
-                textoPadrao: 'Selecione o artista/banda',
-                eObrigatorio: true,
-                rotaCadastro: Rotas.cadastroArtistaBanda,
-                aoAlterar: (artista) {
-                  setState(() {
-                    _artistaSelecionado = artista;
-                  });
-                },
-              ),
+              _carregandoArtistas
+                  ? const CircularProgressIndicator()
+                  : CampoOpcoes<DTOArtistaBanda>(
+                      opcoes: _artistas,
+                      valorSelecionado: _artistaSelecionado,
+                      rotulo: 'Artista/Banda',
+                      textoPadrao: 'Selecione o artista/banda',
+                      eObrigatorio: true,
+                      rotaCadastro: Rotas.cadastroArtistaBanda,
+                      aoAlterar: (artista) {
+                        setState(() {
+                          _artistaSelecionado = artista;
+                        });
+                      },
+                    ),
               const SizedBox(height: 16),
-              CampoMultiSelecao<DTOCategoriaMusica>(
-                opcoes: _categoriasMock,
-                valoresSelecionados: _categoriasSelecionadas,
-                rotaCadastro: Rotas.cadastroCategoriaMusica,
-                rotulo: 'Categorias de Música',
-                textoPadrao: 'Selecione categorias',
-                eObrigatorio: true,
-                onChanged: (selecionados) {
-                  setState(() {
-                    _categoriasSelecionadas
-                      ..clear()
-                      ..addAll(selecionados);
-                  });
-                },
-              ),
+              _carregandoCategorias
+                  ? const CircularProgressIndicator()
+                  : CampoMultiSelecao<DTOCategoriaMusica>(
+                      opcoes: _categorias,
+                      valoresSelecionados: _categoriasSelecionadas,
+                      rotaCadastro: Rotas.cadastroCategoriaMusica,
+                      rotulo: 'Categorias de Música',
+                      textoPadrao: 'Selecione categorias',
+                      eObrigatorio: true,
+                      onChanged: (selecionados) {
+                        setState(() {
+                          _categoriasSelecionadas
+                            ..clear()
+                            ..addAll(selecionados);
+                        });
+                      },
+                    ),
               const SizedBox(height: 24),
               Text('Links de Vídeo Aula (opcional)'),
               const SizedBox(height: 8),

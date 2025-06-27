@@ -5,7 +5,7 @@ import 'package:spin_flow/widget/componentes/campos/comum/campo_texto.dart';
 import 'package:spin_flow/widget/componentes/campos/comum/campo_data.dart';
 import 'package:spin_flow/widget/componentes/campos/selecao_unica/campo_busca_opcoes.dart';
 import 'package:spin_flow/configuracoes/rotas.dart';
-import 'package:spin_flow/banco/mock/mock_musicas.dart';
+import 'package:spin_flow/banco/sqlite/dao/dao_musica.dart';
 
 class FormMix extends StatefulWidget {
   const FormMix({super.key});
@@ -22,6 +22,23 @@ class _FormMixState extends State<FormMix> {
   DateTime? _dataFim;
   bool _ativo = true;
   final List<DTOMusica> _musicasSelecionadas = [];
+  List<DTOMusica> _musicasDisponiveis = [];
+  bool _carregandoMusicas = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarMusicas();
+  }
+
+  Future<void> _carregarMusicas() async {
+    final dao = DAOMusica();
+    final lista = await dao.listar();
+    setState(() {
+      _musicasDisponiveis = lista;
+      _carregandoMusicas = false;
+    });
+  }
 
   void _adicionarMusica(DTOMusica? musica) {
     if (musica != null && !_musicasSelecionadas.any((m) => m.id == musica.id)) {
@@ -70,7 +87,8 @@ class _FormMixState extends State<FormMix> {
   }
 
   void _salvar() {
-    if (_chaveFormulario.currentState!.validate() && _musicasSelecionadas.isNotEmpty) {
+    if (_chaveFormulario.currentState!.validate() &&
+        _musicasSelecionadas.isNotEmpty) {
       final dto = _criarDTO();
       debugPrint(dto.toString());
       showDialog(
@@ -136,14 +154,16 @@ class _FormMixState extends State<FormMix> {
               aoAlterar: (data) => setState(() => _dataFim = data),
             ),
             const SizedBox(height: 16),
-            CampoBuscaOpcoes<DTOMusica>(
-              opcoes: mockMusicas,
-              rotulo: 'Música',
-              eObrigatorio: false,
-              textoPadrao: 'Selecione as músicas do mix',
-              rotaCadastro: Rotas.cadastroMusica,
-              aoAlterar: _adicionarMusica,
-            ),
+            _carregandoMusicas
+                ? const CircularProgressIndicator()
+                : CampoBuscaOpcoes<DTOMusica>(
+                    opcoes: _musicasDisponiveis,
+                    rotulo: 'Música',
+                    eObrigatorio: false,
+                    textoPadrao: 'Selecione as músicas do mix',
+                    rotaCadastro: Rotas.cadastroMusica,
+                    aoAlterar: _adicionarMusica,
+                  ),
             const SizedBox(height: 8),
             TextButton.icon(
               onPressed: () {},
@@ -151,7 +171,10 @@ class _FormMixState extends State<FormMix> {
               label: const Text('Adicionar música ao mix'),
             ),
             const SizedBox(height: 8),
-            const Text('Músicas no mix:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Músicas no mix:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             ..._musicasSelecionadas.map(
               (musica) => ListTile(
                 title: Text('${musica.nome} - ${musica.artista.nome}'),
@@ -176,10 +199,7 @@ class _FormMixState extends State<FormMix> {
               title: const Text('Ativo'),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _salvar,
-              child: const Text('Salvar Mix'),
-            ),
+            ElevatedButton(onPressed: _salvar, child: const Text('Salvar Mix')),
           ],
         ),
       ),
